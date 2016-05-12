@@ -15,10 +15,10 @@
 
 #define NO_OF_REGISTERS 8
 
-#define OPCODE_MASK 0xE000
-#define RD_MASK 0x1C00
-#define RS_MASK 0x0380
-#define IMMED_MASK 0x007F
+#define OPCODE_MASK 0xF000
+#define RD_MASK 0x0E00
+#define RS_MASK 0x01C0
+#define IMMED_MASK 0x003F
 
 #define HALT 0x0
 #define ADD 1
