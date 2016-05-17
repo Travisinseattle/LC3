@@ -19,15 +19,30 @@
 #define RD_MASK 0x0E00
 #define RS_MASK 0x01C0
 #define IMMED_MASK 0x003F
+#define BIT_FIVE 0x0020
+#define BIT_ELEVEN 0x0800
+#define BIT_TEN 0x0400
+#define BIT_NINE 0x0200
 
 #define HALT 0x0
-#define ADD 1
-#define ADI 2 
-#define NAND 3
-#define LDI 4
-#define LD 5
-#define ST 6
-#define BRZ 7
+#define ADD 1 //double (ADD, ADI), parse on bit 5
+#define AND 2 //double (AND, ANDI), parse on bit 5
+#define BR 3
+#define JMP 4 
+#define JSR 5 //double (JSR, JSRR) parse on bit 11
+#define LD 6
+#define LDI 7
+#define LDR 8
+#define LEA 9
+#define NOT 10
+#define RET 11
+#define ST 12
+#define STI 13
+#define STR 14
+#define TRAP 15
+
+
+
 
 
 typedef unsigned short Register;
