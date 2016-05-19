@@ -18,7 +18,10 @@
 #define OPCODE_MASK 0xF000
 #define RD_MASK 0x0E00
 #define RS_MASK 0x01C0
-#define IMMED_MASK 0x003F
+#define IMMED_MASK_5 0x003F
+#define IMMED_MASK_6 0x003F
+#define IMMED_MASK_8 0x00FF
+#define IMMED_MASK_9 0x01FF
 #define BIT_FIVE 0x0020
 #define BIT_ELEVEN 0x0800
 #define BIT_TEN 0x0400
