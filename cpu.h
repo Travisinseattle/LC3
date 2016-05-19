@@ -14,7 +14,7 @@
 #define POINTER_ERROR -1
 
 #define NO_OF_REGISTERS 8
-
+//Concurrent Modification
 #define OPCODE_MASK 0xF000
 #define RD_MASK 0x0E00
 #define RS_MASK 0x01C0
