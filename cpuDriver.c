@@ -34,7 +34,8 @@ int main(int argc, char *argv[]) {
 		debug_value = 1;
 	}
 	
-	/* Start the controller */
+	/* Start the controller, requires debug flag to be set (./cpuDriver -d) in order
+		to run the debug console.*/
 	controller(cpu, memory, debug_value);
 	
   return(0);

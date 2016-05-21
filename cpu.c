@@ -35,9 +35,14 @@ int initCPU (CPU_p cpu) {
 	if (cpu == NULL) return POINTER_ERROR;
 	cpu->alu = constructALU();
 	// initialize register file with random numbers
-	cpu->pc = 0;
 	cpu->ir = 0;
+	cpu->pc = 0;
+	cpu->sw = 0;
+	cpu->mar = 0;
+	cpu->mdr = 0;
 	cpu->sext = 0;
+	cpu->run_bit = 0;
+	cpu->zero = 0;
 }
 
 Register getIR (CPU_p cpu) {
@@ -50,21 +55,49 @@ Register getIR (CPU_p cpu) {
 Register getOPCODE (CPU_p cpu) {
 	if (cpu == NULL) return POINTER_ERROR;
 	Register temp = cpu->ir & OPCODE_MASK;
-	temp = temp >> 13;
+	temp = temp >> 12;
 	return (Register) temp;
 }
 
 Register getRD (CPU_p cpu) {
 	if (cpu == NULL) return POINTER_ERROR;
 	Register temp = cpu->ir & RD_MASK;
-	temp = temp >> 10;
+	temp = temp >> 9;
 	return (Register) temp;
 }
 
 Register getRS (CPU_p cpu) {
 	if (cpu == NULL) return POINTER_ERROR;
 	Register temp = cpu->ir & RS_MASK;
-	temp = temp >> 7;
+	temp = temp >> 6;
+	return (Register) temp;
+}
+
+Register getBit5 (CPU_p cpu) {
+	if (cpu == NULL) return POINTER_ERROR;
+	Register temp = cpu->ir & BIT_FIVE;
+	temp = temp >> 5;
+	return (Register) temp;
+}
+
+Register getBit9 (CPU_p cpu) {
+	if (cpu == NULL) return POINTER_ERROR;
+	Register temp = cpu->ir & BIT_NINE;
+	temp = temp >> 9;
+	return (Register) temp;
+}
+
+Register getBit10 (CPU_p cpu) {
+	if (cpu == NULL) return POINTER_ERROR;
+	Register temp = cpu->ir & BIT_TEN;
+	temp = temp >> 10;
+	return (Register) temp;
+}
+
+Register getBit11 (CPU_p cpu) {
+	if (cpu == NULL) return POINTER_ERROR;
+	Register temp = cpu->ir & BIT_ELEVEN;
+	temp = temp >> 11;
 	return (Register) temp;
 }
 
@@ -81,108 +114,50 @@ void loadRegisters(CPU_p cpu, Register reg1, Register reg2) {
 
 /* signExtend
    Check for null CPU, make 3 registers: 'val' for a return register, 'bit' a register
-   that will be used for checking the sign bit of the IMMED7, and 'negative' a register
-   that will be set to all ones for the extra 9 bits required to extend a 7-bit number.
-   Perform the check and or val if the IMMED7 is negative, return val.
+   that will be used for checking the sign bit of the Immediate register, and 'negative' a register
+   that will be set to all ones for the extra bits required to extend a n-bit number.
+   Perform the check and OR val if the immediate is negative, then return val.
 */
-Register signExtend(CPU_p cpu) {
+Register signExtend(CPU_p cpu, int len) {
   if (cpu == NULL) return POINTER_ERROR;  
   /* Make a register for the return value and the bit value */
-  Register val, bit;
-  /* set a negative Register with the first 9 bits set to 1, the remaining to 0. */
-  Register negative = 0xFF80;
-
-  /*To start, copy the 7 bits that compose the immed7 from cpu->ir to
-    val. */
-  val = cpu->ir & IMMED_MASK;
+  Register val, bit, negative;
   
-  /* set bit using bitshifting and check against cpu->ir. */
-  bit = cpu->ir & 1 << 6;
-
-  /* if the value of bit is > 0, it means immed7 is negative, so flip all other bits
+  /* Switch case to determine how many bits need extended.  Based on value of int, will sign
+  extend for 5, 6, 8, and 11 bits by . */
+  switch (len) {
+	  case 5:  //for sign extention of 5 bits.
+	  negative = 0x0FFE0;
+	  val = cpu->ir & IMMED_MASK_5;
+	  bit = cpu->ir & 1 << 4;
+	  break;
+	  case 6:  //for sign extention of 6 bits.
+	  negative = 0x0FFC0;
+	  val = cpu->ir & IMMED_MASK_6;
+	  bit = cpu->ir & 1 << 5;
+	  break;
+	  case 8:  //for sign extention of 8 bits.
+	  negative = 0x0FF00;
+	  val = cpu->ir & IMMED_MASK_8;
+	  bit = cpu->ir & 1 << 7;
+	  break;
+	  case 11:  //for sign extention of 11 bits.
+	  negative = 0x0F800;
+	  val = cpu->ir & IMMED_MASK_11;
+	  bit = cpu->ir & 1 << 10;
+	  break;
+	  default:
+	  break;	  
+  }
+  
+  /* if the value of bit is > 0, it means the immediate register is negative, so flip all other bits
      to 1. */
   if (bit > 0) {
-    /* OR 'negative' with 'val' to flip the 9 most signifigant bits */
+    /* OR 'negative' with 'val' to flip the most signifigant bits */
     val = val | negative;
   }
   
   return val;
-}
-
-/* add
-   Method to perform an add function in the ALU.  Creates a pointer to the alu
-   in the CPU, loads A and B registers with values obtained from the CPU registers
-   based on the specified locations of RD and RS.  Performs an add operation on A and
-   B and places the result in the R register.  Load's the designated RD register with
-   the value found in the R register. 
-*/
-void add(CPU_p cpu) {
-  //Create the pointer to the CPU's ALU.
-  ALU_p alu = cpu->alu;
-  //Load values based on IR code.
-  alu->a = cpu->reg_file[getRD(cpu)];
-  alu->b = cpu->reg_file[getRS(cpu)];
-  //perform ADD operation and store to register R.
-  alu->r = alu->a + alu->b;
-  //load RD register with value in register R.
-  cpu->reg_file[getRD(cpu)] = alu->r;
-}
-
-/* adi
-   Method to perform an ADI function in the ALU.  Creates a pointer to the alu
-   in the CPU, loads A and B registers with values obtained from the CPU registers
-   based on the specified locations of RD and sign extended IMMED7.  Performs an ADD 
-   operation on A and B and places the result in the R register.  Load's the designated 
-   RD register with the value found in the R register. 
-*/
-void adi(CPU_p cpu) {
-  //Create the pointer to the CPU's ALU.
-  ALU_p alu = cpu->alu;
-  //Load values based on IR code.
-  alu->a = cpu->reg_file[getRD(cpu)];
-  alu->b = signExtend(cpu);
-  //perform ADD operation and store to register R.
-  alu->r = alu->a + alu->b;
-  //load RD register with value in register R.
-  cpu->reg_file[getRD(cpu)] = alu->r;
-}
-
-/* nand
-   Method to perform an NAND function in the ALU.  Creates a pointer to the alu
-   in the CPU, loads A and B registers with values obtained from the CPU registers
-   based on the specified locations of RD and RS.  Performs an NAND operation on A
-   and B and places the result in the R register.  Load's the designated RD register
-   with the value found in the R register. 
-*/
-void nand(CPU_p cpu) {
-  //Create the pointer to the CPU's ALU.
-  ALU_p alu = cpu->alu;
-  //Load values based on IR code.
-  alu->a = cpu->reg_file[getRD(cpu)];
-  alu->b = cpu->reg_file[getRS(cpu)];  
-  //perform NAND operation and store to register R.
-  alu->r = ~(alu->a & alu->b);;
-  //load RD register with value in register R.
-  cpu->reg_file[getRD(cpu)] = alu->r;
-}
-
-/* Old code to perform 3 operations, used in Assignment 3. */
-void parseOP(CPU_p cpu) {
-  Byte op = getOPCODE (cpu);
-
-  switch (op) {
-  case 0:
-    add(cpu);
-    break;
-  case 1:
-    adi(cpu);
-    break;
-  case 2:
-    nand(cpu);
-    break;
-  default:
-    break;
-  }
 }
 
 /* setZeroFlag
@@ -333,10 +308,14 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
     for (;;) {   
         switch (state) {
 			case FETCH:
+			/* there is a flag set when you call the inital program.  this allows the debug
+			   menu to display and step if it is called.  (./cpuDriver -d). */
 				if (debug_value == 1) {
 					debug(cpu, mem);
 				}
-				// get memory[PC] into IR - memory is a global array
+				/* Set cpu->mar to value of pc, which represents an index in the memory.
+				   Set cpu->mdr to be equal to memory at index of cpu->mar.
+				   Load cpu->ir by setting it equal to cpu->mdr. */
 				cpu->mar = cpu->pc;
 				cpu->mdr = mem[cpu->mar];
 				cpu->ir = cpu->mdr;
@@ -348,9 +327,42 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 			case DECODE:
 				/* Parse the Opcode and store the result using getOPCODE() function. */
 				opcode = getOPCODE(cpu);
-				RD = getRD(cpu);
-				RS = getRS(cpu);
-				cpu->sext = signExtend(cpu);				
+				switch (opcode) {
+					case HALT:
+						break;
+					case ADD:						
+						break;
+					case AND:
+						break;
+					case BRnzp:
+						break;						
+					case JMP:
+						break;						
+					case JSR:
+						break;
+					case LD:
+						break;
+					case LDI:
+						break;
+					case LDR:
+						break;
+					case LEA:
+						break;
+					case NOT:
+						break;						
+					case RET:
+						break;
+					case ST:
+						break;
+					case STI:
+						break;
+					case STR:
+						break;					
+					case TRAP:
+						break;
+					default:
+						break;
+				}				
 				state = EVAL_ADDR;
 				break;
 			case EVAL_ADDR:
@@ -359,27 +371,37 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 				the array of Registers in the CPU, or memory locations.
 				*/
 				switch (opcode) {
+					case HALT:
+						break;
 					case ADD:						
 						break;
-					case ADI:
+					case AND:
 						break;
-					case NAND:
+					case BRnzp:
+						break;						
+					case JMP:
+						break;						
+					case JSR:
+						break;
+					case LD:
 						break;
 					case LDI:
 						break;
-					case LD:
-						//Load cpu->mar with value in rs + the immed7 sign extended.
-						cpu->mar = cpu->reg_file[RS] + cpu->sext;
+					case LDR:
+						break;
+					case LEA:
+						break;
+					case NOT:
+						break;						
+					case RET:
 						break;
 					case ST:
-						//Load cpu->mar with value in rd + the immed7 sign extended.
-						cpu->mar = cpu->reg_file[RD] + cpu->sext;
 						break;
-					case BRZ:
-						//Add pc to sign extended immed7 to compute branch address.
-						branch_taken_addr = cpu->pc + cpu->sext;
+					case STI:
 						break;
-					case HALT:
+					case STR:
+						break;					
+					case TRAP:
 						break;
 					default:
 						break;
@@ -391,30 +413,37 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 				the array of registers in the CPU, or from cpu->sext values, ect.
 				*/
 				switch (opcode) {
-					case ADD:	//Load A and B registers in the ALU using RD and RS registers.
-						alu->a = cpu->reg_file[RD];
-						alu->b = cpu->reg_file[RS];
+					case HALT:
 						break;
-					case ADI:	//Load A and B registers in the ALU using RS and cpu->sext
-						alu->a = cpu->reg_file[RS];
-						alu->b = cpu->sext;
+					case ADD:						
 						break;
-					case NAND:	//Load A and B registers in the ALU using RD and RS registers.
-						alu->a = cpu->reg_file[RD];
-						alu->b = cpu->reg_file[RS];
+					case AND:
 						break;
-					case LDI: 	//Load cpu->mdr with value of cpu->sext.
-						cpu->mdr = cpu->sext;
+					case BRnzp:
+						break;						
+					case JMP:
+						break;						
+					case JSR:
 						break;
-					case LD:  //Load cpu->mdr with data at mem[cpu->mar].
-						cpu->mdr = mem[cpu->mar];
+					case LD:
 						break;
-					case ST:	//Load mdr with data in cpu->reg_file[RS].
-						cpu->mdr = cpu->reg_file[RS];
+					case LDI:
 						break;
-					case BRZ:	//No action required.
+					case LDR:
 						break;
-					case HALT:	//No action required.
+					case LEA:
+						break;
+					case NOT:
+						break;						
+					case RET:
+						break;
+					case ST:
+						break;
+					case STI:
+						break;
+					case STR:
+						break;					
+					case TRAP:
 						break;
 					default:
 						break;
@@ -423,32 +452,37 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 				break;
 			case EXECUTE:
 				switch (opcode) {
-					case ADD:	//Peform the requested operation in the ALU and store result in alu->r;
-						alu->r = alu->a + alu->b;
-						setZeroFlag(cpu);
+					case HALT:
 						break;
-					case ADI:	//Peform the requested operation in the ALU and store result in alu->r;
-						alu->r = alu->a + alu->b;
-						setZeroFlag(cpu);
+					case ADD:						
 						break;
-					case NAND:	//Peform the requested operation in the ALU and store result in alu->r;
-						alu->r = ~(alu->a & alu->b);
-						setZeroFlag(cpu);
+					case AND:
 						break;
-					case LDI: 	//No action required.
+					case BRnzp:
+						break;						
+					case JMP:
+						break;						
+					case JSR:
 						break;
-					case LD:	//No action required.
+					case LD:
 						break;
-					case ST:	//Save data in cpu->mdr to location of mem[cpu->mar].
-						mem[cpu->mar] = cpu->mdr;
+					case LDI:
 						break;
-					case BRZ:   //If cpu->zero is not 0, set cpu->pc to branch address.
-						if (cpu->zero == 1) {
-							cpu->pc = branch_taken_addr;
-						}						
+					case LDR:
 						break;
-					case HALT:	//Halt has been called, end the program.
-						return(0);
+					case LEA:
+						break;
+					case NOT:
+						break;						
+					case RET:
+						break;
+					case ST:
+						break;
+					case STI:
+						break;
+					case STR:
+						break;					
+					case TRAP:
 						break;
 					default:
 						break;
@@ -459,27 +493,37 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 				/* Finalize the operation by either moving the result to the RD register, or loading/storing
 					to memory.  */
 				switch (opcode) {
-					case ADD:	//Move the result of the operation from cpu->r to cpu->reg_file[RD];
-						cpu->reg_file[RD] = alu->r;
+					case HALT:
 						break;
-					case ADI:	//Move the result of the operation from cpu->r to cpu->reg_file[RD];
-						cpu->reg_file[RD] = alu->r;
+					case ADD:						
 						break;
-					case NAND:	//Move the result of the operation from cpu->r to cpu->reg_file[RD];
-						cpu->reg_file[RD] = alu->r;
+					case AND:
 						break;
-					case LDI: 	//Load RD with the value of cpu->mdr.
-						cpu->reg_file[RD] = cpu->mdr;
+					case BRnzp:
+						break;						
+					case JMP:
+						break;						
+					case JSR:
 						break;
-					case LD:	//Load RD with the value in cpu->mdr.
-						cpu->reg_file[RD] = cpu->mdr;
+					case LD:
 						break;
-					case ST:	//Store the value of cpu->reg_file[RS] in the location of cpu->mar.
-						mem[cpu->mar] = cpu->reg_file[RS];
+					case LDI:
 						break;
-					case BRZ:   //No action required.						
+					case LDR:
 						break;
-					case HALT:	//No action required.
+					case LEA:
+						break;
+					case NOT:
+						break;						
+					case RET:
+						break;
+					case ST:
+						break;
+					case STI:
+						break;
+					case STR:
+						break;					
+					case TRAP:
 						break;
 					default:
 						break;
