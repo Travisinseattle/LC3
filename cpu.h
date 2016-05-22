@@ -14,7 +14,7 @@
 #define POINTER_ERROR -1
 
 #define NO_OF_REGISTERS 8
-
+//This is a comment about something
 #define OPCODE_MASK 0xF000
 #define RD_MASK 0x0E00
 #define RS_MASK 0x01C0
@@ -22,15 +22,16 @@
 #define IMMED_MASK_6 0x003F
 #define IMMED_MASK_8 0x00FF
 #define IMMED_MASK_9 0x01FF
+#define IMMED_MASK_11 0x07FF
 #define BIT_FIVE 0x0020
-#define BIT_ELEVEN 0x0800
-#define BIT_TEN 0x0400
 #define BIT_NINE 0x0200
+#define BIT_TEN 0x0400
+#define BIT_ELEVEN 0x0800
 
 #define HALT 0x0
 #define ADD 1 //double (ADD, ADI), parse on bit 5
 #define AND 2 //double (AND, ANDI), parse on bit 5
-#define BR 3
+#define BRnzp 3
 #define JMP 4 
 #define JSR 5 //double (JSR, JSRR) parse on bit 11
 #define LD 6
@@ -77,11 +78,7 @@ Register getOPCODE (CPU_p cpu);
 Register getRD (CPU_p cpu);
 Register getRS (CPU_p cpu);
 void loadRegisters(CPU_p cpu, Register reg1, Register reg2);
-Register signExtend(CPU_p cpu);
-void add(CPU_p cpu);
-void adi(CPU_p cpu);
-void nand(CPU_p cpu);
-void parseOP(CPU_p cpu);
+Register signExtend(CPU_p cpu, int len);
 Byte setZeroFlag (CPU_p cpu);
 void debug (CPU_p cpu, unsigned short mem[32]);
 void loadMemory(unsigned short mem[32]);
