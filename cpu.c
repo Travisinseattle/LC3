@@ -20,7 +20,6 @@
 #define EXECUTE 4
 #define STORE 5
 
-//WHATUP
 ALU_p constructALU (void) {
 	ALU_p alu = (ALU_p) malloc(sizeof(ALU_s));
 	return alu;
