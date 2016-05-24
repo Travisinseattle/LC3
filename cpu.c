@@ -3,6 +3,8 @@
 	
 	Programmer: George Mobus
 	Programmer: Travis Holloway
+	Programmer: Alec Walsh
+	Programmer: Tyler Horn
 	Date: 4/20/16
 	Descritption:
 		This file contains the implementation code for the CPU class.
@@ -157,7 +159,15 @@ Register signExtend(CPU_p cpu, int len) {
   
   return val;
 }
-
+/* zeroExtend
+	Zero extender for trap instructions.
+*/
+Register zeroExtend(CPU_p cpu){
+	Register val;
+	val = cpu->ir & IMMED_MASK_8;
+	val = val&0x00FF;
+	return val;
+}
 /* setZeroFlag
 	A function to flag whether cpu->alu->r is set to 0 or some other value.  Used 
 	for determining if the system should perform a break operation.
