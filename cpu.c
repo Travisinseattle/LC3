@@ -20,7 +20,6 @@
 #define EXECUTE 4
 #define STORE 5
 
-//WHATUP
 ALU_p constructALU (void) {
 	ALU_p alu = (ALU_p) malloc(sizeof(ALU_s));
 	return alu;
@@ -43,11 +42,6 @@ int initCPU (CPU_p cpu) {
 	cpu->sext = 0;
 	cpu->run_bit = 0;
 	cpu->zero = 0;
-}
-
-Register getIR (CPU_p cpu) {
-	if (cpu == NULL) return POINTER_ERROR;
-	return cpu->ir;
 }
 
 /************************************** Getters *************************************/
@@ -101,6 +95,10 @@ Register getBit11 (CPU_p cpu) {
 	return (Register) temp;
 }
 
+Register getIR (CPU_p cpu) {
+	if (cpu == NULL) return POINTER_ERROR;
+	return cpu->ir;
+}
 
 /************************************* Functions **********************************/
 
@@ -228,41 +226,7 @@ void debug (CPU_p cpu, unsigned short mem[32]) {
 	to happen when the PC reads the memory at that index.
 */
 void loadMemory(unsigned short mem[32]) {
-	/* old code for testing of assignment 4.
-	mem[0] = 0x2500;  //ADD; RD = reg 1, RS = reg 2, cpu->sext = unsused.  Result is 0 + 0 = 0.	
-	mem[1] = 0x4501;  //ADI; RD = reg 1, RS = reg 2, cpu->sext = 1.  Result is 0 + 1 = 1.
-	mem[2] = 0x6500;  //NAND; RD = reg 1, RS = reg 2, cpu->sext = unsused.  Result is FFFF (0 + 0 flipped).
-	mem[3] = 0x8E02;  //LDI; RD = reg 3, RS = reg 4, cpu->sext = 2.  Result is 0 + 2 = 2.
-	mem[4] = 0xAE0A;  //LD; RD = reg 3, RS = reg 4, cpu->sext = 10.  Result is value at Memory[10] or 15.	
-	mem[5] = 0xD70C;  //ST; RD = reg 5, RS = reg 6, cpu->sext = 12.  Result is value at Memory[12] or 0.	
-	mem[6] = 0xFC18;  //BRZ; RD = reg 7, RS = reg 0, cpu->sext = 24 (24 + 7 = 31).  Move PC to Memory[31].
-	mem[7] = 0x0000;  //Unused
-	mem[8] = 0x0000;  //Unused
-	mem[9] = 0x0000;  //Unused
-	mem[10] = 0x000F;  //Target location for load operation.
-	mem[11] = 0x0000;  //Unused
-	mem[12] = 0xFFFF;  //Target loaction for Store, set to 0xFFFF so a change can be verified.
-	mem[13] = 0x0000;  //Unused
-	mem[14] = 0x0000;  //Unused
-	mem[15] = 0x0000;  //Unused
-	mem[16] = 0x0000;  //Unused
-	mem[17] = 0x0000;  //Unused
-	mem[18] = 0x0000;  //Unused
-	mem[19] = 0x0000;  //Unused
-	mem[20] = 0x0000;  //Unused
-	mem[21] = 0x0000;  //Unused
-	mem[22] = 0x0000;  //Unused
-	mem[23] = 0x0000;  //Unused
-	mem[24] = 0x0000;  //Unused
-	mem[25] = 0x0000;  //Unused
-	mem[26] = 0x0000;  //Unused
-	mem[27] = 0x0000;  //Unused
-	mem[28] = 0x0000;  //Unused
-	mem[29] = 0x0000;  //Unused
-	mem[30] = 0x0000;  //Unused
-	mem[31] = 0x0000;  //HALT; RD = reg 0, RS = reg 0, cpu->sext = Unused. Program ends.
-	*/
-	
+
 	mem[0] = 0x880C;   //LDI: RD = R2, RS = Unused, cpu->sext = Immed7 sign extended for 0x12.  	
 	mem[1] = 0xAD00;   //LD: RD = R2, RS = R2, cpu->sext = Immed7 sign extended for 0x0.
 	mem[2] = 0x4901;   //ADI: RD = R2, RS = R2, cpu->sext = Immed7 sign extended for 0x1.
@@ -330,14 +294,14 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 				switch (opcode) {
 					case HALT:
 						break;
-					case ADD:						
+					case ADD:
 						break;
 					case AND:
 						break;
 					case BRnzp:
-						break;						
+						break;
 					case JMP:
-						break;						
+						break;
 					case JSR:
 						break;
 					case LD:
@@ -349,7 +313,7 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 					case LEA:
 						break;
 					case NOT:
-						break;						
+						break;
 					case RET:
 						break;
 					case ST:
@@ -357,12 +321,12 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 					case STI:
 						break;
 					case STR:
-						break;					
+						break;
 					case TRAP:
 						break;
 					default:
 						break;
-				}				
+				}
 				state = EVAL_ADDR;
 				break;
 			case EVAL_ADDR:
@@ -373,14 +337,14 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 				switch (opcode) {
 					case HALT:
 						break;
-					case ADD:						
+					case ADD:
 						break;
 					case AND:
 						break;
 					case BRnzp:
-						break;						
+						break;
 					case JMP:
-						break;						
+						break;
 					case JSR:
 						break;
 					case LD:
@@ -392,7 +356,7 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 					case LEA:
 						break;
 					case NOT:
-						break;						
+						break;
 					case RET:
 						break;
 					case ST:
@@ -400,7 +364,7 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 					case STI:
 						break;
 					case STR:
-						break;					
+						break;
 					case TRAP:
 						break;
 					default:
@@ -415,14 +379,14 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 				switch (opcode) {
 					case HALT:
 						break;
-					case ADD:						
+					case ADD:
 						break;
 					case AND:
 						break;
 					case BRnzp:
-						break;						
+						break;
 					case JMP:
-						break;						
+						break;
 					case JSR:
 						break;
 					case LD:
@@ -434,7 +398,7 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 					case LEA:
 						break;
 					case NOT:
-						break;						
+						break;
 					case RET:
 						break;
 					case ST:
@@ -442,7 +406,7 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 					case STI:
 						break;
 					case STR:
-						break;					
+						break;
 					case TRAP:
 						break;
 					default:
@@ -454,14 +418,14 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 				switch (opcode) {
 					case HALT:
 						break;
-					case ADD:						
+					case ADD:
 						break;
 					case AND:
 						break;
 					case BRnzp:
-						break;						
+						break;
 					case JMP:
-						break;						
+						break;
 					case JSR:
 						break;
 					case LD:
@@ -473,7 +437,7 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 					case LEA:
 						break;
 					case NOT:
-						break;						
+						break;
 					case RET:
 						break;
 					case ST:
@@ -481,7 +445,7 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 					case STI:
 						break;
 					case STR:
-						break;					
+						break;
 					case TRAP:
 						break;
 					default:
@@ -495,14 +459,14 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 				switch (opcode) {
 					case HALT:
 						break;
-					case ADD:						
+					case ADD:
 						break;
 					case AND:
 						break;
 					case BRnzp:
-						break;						
+						break;
 					case JMP:
-						break;						
+						break;
 					case JSR:
 						break;
 					case LD:
@@ -514,7 +478,7 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 					case LEA:
 						break;
 					case NOT:
-						break;						
+						break;
 					case RET:
 						break;
 					case ST:
@@ -522,7 +486,7 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 					case STI:
 						break;
 					case STR:
-						break;					
+						break;
 					case TRAP:
 						break;
 					default:

@@ -78,7 +78,7 @@ Register getOPCODE (CPU_p cpu);
 Register getRD (CPU_p cpu);
 Register getRS (CPU_p cpu);
 void loadRegisters(CPU_p cpu, Register reg1, Register reg2);
-Register signExtend(CPU_p cpu);
+Register signExtend(CPU_p cpu, int len);
 Byte setZeroFlag (CPU_p cpu);
 void debug (CPU_p cpu, unsigned short mem[32]);
 void loadMemory(unsigned short mem[32]);
