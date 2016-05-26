@@ -30,26 +30,21 @@
 #define BIT_TEN 0x0400
 #define BIT_ELEVEN 0x0800
 
-#define HALT 0x0
 #define ADD 1 //double (ADD, ADI), parse on bit 5
-#define AND 2 //double (AND, ANDI), parse on bit 5
-#define BRnzp 3
-#define JMP 4 
-#define JSR 5 //double (JSR, JSRR) parse on bit 11
-#define LD 6
-#define LDI 7
-#define LDR 8
-#define LEA 9
-#define NOT 10
-#define RET 11
-#define ST 12
-#define STI 13
-#define STR 14
+#define AND 5 //double (AND, ANDI), parse on bit 5
+#define BRnzp 0
+#define JMP 12 
+#define JSR 4 //double (JSR, JSRR) parse on bit 11
+#define LD 2
+#define LDI 10
+#define LDR 6
+#define LEA 13
+#define NOT 9
+#define RET 12
+#define ST 3
+#define STI 11
+#define STR 7
 #define TRAP 15
-
-
-
-
 
 typedef unsigned short Register;
 typedef unsigned char Byte;
