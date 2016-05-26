@@ -179,22 +179,23 @@ void debug (CPU_p cpu, unsigned short mem[32]) {
 	//Declare varibles
 	int menu;
 	
-	//Setup print statements.
-	printf("********************** SC-1 Simulator: Travis Holloway ********************\n\n");
-	printf("Registers				Memory\n");
+
+void debug (CPU_p cpu, unsigned short mem[32]) {
+	//Declare varibles
+	int menu;
+	int memory = 0;
+   int counter;
+   printf("Registers				Memory\n");
 	printf("=============================================================\n");
-	printf("R0: %x			0x0000:	%x	%x\n", cpu->reg_file[0], mem[0], mem[1]);
-	printf("R1: %x			0x0002:	%x	%x\n", cpu->reg_file[1], mem[2], mem[3]);
-	printf("R2: %x			0x0004:	%x	%x\n", cpu->reg_file[2], mem[4], mem[5]);
-	printf("R3: %x			0x0006:	%x	%x\n", cpu->reg_file[3], mem[6], mem[7]);
-	printf("R4: %x			0x0008:	%x	%x\n", cpu->reg_file[4], mem[8], mem[9]);
-	printf("R5: %x			0x000A:	%x	%x\n", cpu->reg_file[5], mem[10], mem[11]);
-	printf("R6: %x			0x000C:	%x	%x\n", cpu->reg_file[6], mem[12], mem[13]);
-	printf("R7: %x			0x000E:	%x	%x\n\n", cpu->reg_file[7], mem[14], mem[15]);
+   for (counter = 0; counter < 8; counter++) {
+      printf("R%d: %x   %04x: %x %x\n", counter, cpu ->reg_file[0);
+   }
+   printf("\nMemory Space: \n");
+   printf("=============================================================\n");
+   for (memory = 0; memory < MEM_SIZE; memory++){
+      printf("Memory: %04x: %x\n", memory, mem[memory]);
+   }
 	printf("PC: %x		SW: %x		IR: %x\n\n", cpu->pc, cpu->sw, cpu->ir);
-	printf("Please choose from the following options:\n");
-	printf("Load = 1, Save = 2, Run = 3, Step = 4, Memory Dump = 5, Memory Fill = 6.\n\n");
-	
 	//Capture menu choices.
 	scanf("%d", &menu);
     getchar();
@@ -292,7 +293,7 @@ int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value) {
 				/* Parse the Opcode and store the result using getOPCODE() function. */
 				opcode = getOPCODE(cpu);
 				switch (opcode) {
-					case HALT:
+   				case HALT:
 						break;
 					case ADD:
 						break;
