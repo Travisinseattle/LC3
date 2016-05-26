@@ -3,6 +3,8 @@
 	
     Programer: George Mobus
     Programer: Travis Holloway
+	Programmer: Alec Walsh
+	Programmer: Tyler Horn
 	Date: 4/20/16
 	Description:
 		This header file contains the definitions for the CPU object.
