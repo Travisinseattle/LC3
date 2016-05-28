@@ -16,7 +16,7 @@
 
 
 //Array of unsigned shorts that represents memory.
-static unsigned short memory[32];
+static unsigned short memory[MEM_SIZE];
 
 
 int main(int argc, char *argv[]) {
