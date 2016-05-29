@@ -312,14 +312,23 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case LEA:
 						break;
 					case NOT:
+						RD = getRD(cpu);
+						RS = getRS(cpu);
 						break;
 					case RET:
 						break;
 					case ST:
+						RD = getRD(cpu);
+						cpu->sext = signExtend(cpu,9);
 						break;
 					case STI:
+						RD = getRD(cpu);
+						cpu->sext = signExtend(cpu,9);
 						break;
 					case STR:
+						RD = getRD(cpu);
+						RS = getRS(cpu);
+						cpu->sext = signExtend(cpu,6);
 						break;
 					case TRAP:
 						break;
@@ -359,10 +368,13 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case RET:
 						break;
 					case ST:
+						cpu->mar = cpu->pc + cpu->sext;
 						break;
 					case STI:
+						cpu->mar = mem[cpu->pc + cpu->sext];
 						break;
 					case STR:
+						cpu->mar = cpu->reg_file[RS] + cpu->sext;
 						break;
 					case TRAP:
 						break;
@@ -399,12 +411,14 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case NOT:
 						break;
 					case RET:
+						cpu->mdr = cpu->reg_file[RET_REG];
 						break;
 					case ST:
-						break;
+						//Same as below
 					case STI:
-						break;
+						//Same as below
 					case STR:
+						cpu->mdr = cpu->reg_file[RD];
 						break;
 					case TRAP:
 						break;
@@ -466,6 +480,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						}
 						break;
 					case NOT:
+<<<<<<< HEAD
 						if (R7_flag == 1) {
 							cpu -> pc = cpu -> reg_file[7];
 						}
@@ -489,6 +504,19 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						if (R7_flag == 1) {
 							cpu -> pc = cpu -> reg_file[7];
 						}
+=======
+						cpu->mdr = ~(RS);
+						break;
+					case RET:
+						cpu->pc = cpu->mdr;
+						break;
+					case ST:
+						//Same as below
+					case STI:
+						//Same as below
+					case STR:
+						mem[cpu->mar]=cpu->mdr;
+>>>>>>> origin/master
 						break;
 					case TRAP:
 						if (R7_flag == 1) {
@@ -525,14 +553,18 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case LEA:
 						break;
 					case NOT:
+						cpu->reg_file[RD] = cpu->mdr;
 						break;
 					case RET:
 						break;
 					case ST:
+						//Unused
 						break;
 					case STI:
+						//Unused
 						break;
 					case STR:
+						//Unused
 						break;
 					case TRAP:
 						break;
