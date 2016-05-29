@@ -3,8 +3,6 @@
 	
     Programer: George Mobus
     Programer: Travis Holloway
-	Programmer: Alec Walsh
-	Programmer: Tyler Horn
 	Date: 4/20/16
 	Description:
 		This header file contains the definitions for the CPU object.
@@ -29,6 +27,7 @@
 #define BIT_NINE 0x0200
 #define BIT_TEN 0x0400
 #define BIT_ELEVEN 0x0800
+#define NZP_VAL	0xE00
 
 #define ADD 1 //double (ADD, ADI), parse on bit 5
 #define AND 5 //double (AND, ANDI), parse on bit 5
