@@ -40,11 +40,11 @@
 #define LDR 6
 #define LEA 13
 #define NOT 9
-#define RET 12
 #define ST 3
 #define STI 11
 #define STR 7
 #define TRAP 15
+#define HALT 16
 
 typedef unsigned short Register;
 typedef unsigned char Byte;
@@ -61,7 +61,7 @@ typedef struct cpu_s {
 	Register ir, pc, sw; 	// IR, PC, and SW (status word)
 	Register mar, mdr;
 	Register sext;
-	Byte run_bit, zero;
+	Byte run_bit;
 } CPU_s;
 
 typedef CPU_s * CPU_p;
