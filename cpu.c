@@ -3,8 +3,6 @@
 	
 	Programmer: George Mobus
 	Programmer: Travis Holloway
-	Programmer: Alec Walsh
-	Programmer: Tyler Horn
 	Date: 4/20/16
 	Descritption:
 		This file contains the implementation code for the CPU class.
@@ -22,6 +20,9 @@
 #define EXECUTE 4
 #define STORE 5
 #define MEM_SIZE 100
+
+
+//P.g 537 on PDF for the OPCODES
 
 ALU_p constructALU (void) {
 	ALU_p alu = (ALU_p) malloc(sizeof(ALU_s));
@@ -52,6 +53,18 @@ Register getOPCODE (CPU_p cpu) {
 	if (cpu == NULL) return POINTER_ERROR;
 	Register temp = cpu->ir & OPCODE_MASK;
 	temp = temp >> 12;
+	return (Register) temp;
+}
+
+Register get9Offset(CPU_p cpu) {
+	if (cpu == NULL) return POINTER_ERROR;
+	Register temp = cpu -> ir & IMMED_MASK_9;
+	return (Register) temp;
+}
+
+Register get11Offset(CPU_p cpu) {
+	if (cpu == NULL) return POINTER_ERROR;
+	Register temp = cpu -> ir & IMMED_MASK_11;
 	return (Register) temp;
 }
 
@@ -159,6 +172,10 @@ Register signExtend(CPU_p cpu, int len) {
   
   return val;
 }
+<<<<<<< HEAD
+
+/* setZeroFlag
+=======
 /* zeroExtend
 	Zero extender for trap instructions.
 */
@@ -169,6 +186,7 @@ Register zeroExtend(CPU_p cpu){
 	return val;
 }
 /* setcc
+>>>>>>> origin/master
 	A function to flag whether cpu->alu->r is set to 0 or some other value.  Used 
 	for determining if the system should perform a break operation.
 */
@@ -242,9 +260,16 @@ void interpreter(unsigned short mem[MEM_SIZE]) {
 	fclose(infile);
 }
 
+Byte getNZP(Register opcode) {
+	Byte nzp = opcode >> 9;
+	return nzp;
+}
+
 int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 	//Initiate varibles.
-	Byte RD, RS;
+	Byte RD, RS, nzp_flag, offset, nzp_switch = 0, R7_flag = 0;
+	//nzp_flag is used by branch case; nzp_switch is used by switching opcodes such as ADD, ADI, ect...
+	//R7 Flag should be checked in each case to see if you need to return to R7 if JSR was taken.
 	Register opcode = 0;
 	Register branch_taken_addr;
 	ALU_p alu = cpu->alu;
@@ -252,6 +277,9 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
     int state = FETCH;
     for (;;) {   
         switch (state) {
+
+        //NOTE: By contract, do not JSR to another JMP or Branch statement.
+
 			case FETCH:
 			/* there is a flag set when you call the inital program.  this allows the debug
 			   menu to display and step if it is called.  (./cpuDriver -d). */
@@ -280,10 +308,16 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case AND:
 						break;
 					case BRnzp:
+						nzp_flag = getNZP(opcode);
+						//No Further Actions;
 						break;
 					case JMP:
+						offset = get9Offset(cpu);
 						break;
 					case JSR:
+						cpu -> reg_file[7] = cpu -> pc;
+						cpu += get11Offset(cpu);
+						R7_flag = 1;
 						break;
 					case LD:
 						break;
@@ -411,29 +445,84 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case HALT:
 						break;
 					case ADD:
+						if (R7_flag == 1) {
+							cpu -> pc = cpu -> reg_file[7];
+						}
 						break;
 					case AND:
+						if (R7_flag == 1) {
+							cpu -> pc = cpu -> reg_file[7];
+						}
 						break;
 					case BRnzp:
-						//Tyler Working on these
+						if ((nzp_flag == 1  || nzp_flag == 3 || nzp_flag == 5)&& nzp_switch == 1) {
+							cpu -> pc = cpu -> pc + signExtend(cpu, 9);
+						} else if ((nzp_flag == 2 || nzp_flag == 3 || nzp_flag == 6) && nzp_switch == 2){
+							cpu -> pc = cpu -> pc + signExtend(cpu, 9);
+						} else if ((nzp_flag == 4 || nzp_flag == 5 || nzp_flag == 6) && nzp_switch == 4){
+							cpu -> pc = cpu -> pc + signExtend(cpu, 9);
+						} else if (nzp_flag == 7) {
+							cpu -> pc = cpu -> pc + signExtend(cpu, 9);
+						}
 						break;
 					case JMP:
+						cpu -> pc = getRS(cpu);
+						state = FETCH;
 						break;
-						//Tyler Working on these
 					case JSR:
-						//Tyler Working on these
+						state = FETCH;
 						break;
 					case LD:
+						if (R7_flag == 1) {
+							cpu -> pc = cpu -> reg_file[7];
+						}
 						break;
 					case LDI:
+						if (R7_flag == 1) {
+							cpu -> pc = cpu -> reg_file[7];
+						}
 						break;
 					case LDR:
+						if (R7_flag == 1) {
+							cpu -> pc = cpu -> reg_file[7];
+						}
 						break;
 					case LEA:
+<<<<<<< HEAD
+						if (R7_flag == 1) {
+							cpu -> pc = cpu -> reg_file[7];
+						}
+=======
 						cpu->reg_file[RD] = cpu->mdr;
 						setcc(cpu);
+>>>>>>> origin/master
 						break;
 					case NOT:
+<<<<<<< HEAD
+						if (R7_flag == 1) {
+							cpu -> pc = cpu -> reg_file[7];
+						}
+						break;
+					case RET:
+						if (R7_flag == 1) {
+							cpu -> pc = cpu -> reg_file[7];
+						}
+						break;
+					case ST:
+						if (R7_flag == 1) {
+							cpu -> pc = cpu -> reg_file[7];
+						}
+						break;
+					case STI:
+						if (R7_flag == 1) {
+							cpu -> pc = cpu -> reg_file[7];
+						}
+						break;
+					case STR:
+						if (R7_flag == 1) {
+							cpu -> pc = cpu -> reg_file[7];
+						}
+=======
 						cpu->mdr = ~(RS);
 						break;
 					case ST:
@@ -442,8 +531,12 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						//Same as below
 					case STR:
 						mem[cpu->mar]=cpu->mdr;
+>>>>>>> origin/master
 						break;
 					case TRAP:
+						if (R7_flag == 1) {
+							cpu -> pc = cpu -> reg_file[7];
+						}
 						break;
 					default:
 						break;
