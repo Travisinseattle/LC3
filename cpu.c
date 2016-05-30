@@ -20,7 +20,6 @@
 #define EXECUTE 4
 #define STORE 5
 #define MEM_SIZE 100
-#define	HALT 0
 
 
 //P.g 537 on PDF for the OPCODES
@@ -46,7 +45,6 @@ int initCPU (CPU_p cpu) {
 	cpu->mdr = 0;
 	cpu->sext = 0;
 	cpu->run_bit = 0;
-	cpu->zero = 0;
 }
 
 /************************************** Getters *************************************/
@@ -174,17 +172,35 @@ Register signExtend(CPU_p cpu, int len) {
   
   return val;
 }
+<<<<<<< HEAD
 
 /* setZeroFlag
+=======
+/* zeroExtend
+	Zero extender for trap instructions.
+*/
+Register zeroExtend(CPU_p cpu){
+	Register val;
+	val = cpu->ir & IMMED_MASK_8;
+	val = val&0x00FF;
+	return val;
+}
+/* setcc
+>>>>>>> origin/master
 	A function to flag whether cpu->alu->r is set to 0 or some other value.  Used 
 	for determining if the system should perform a break operation.
 */
-Byte setZeroFlag (CPU_p cpu) {
+Register setcc (CPU_p cpu) {
 	if (cpu == NULL) return POINTER_ERROR;
-	if (cpu->alu->r == 0) cpu->zero = 1;
-	else cpu->zero = 0;
-	printf("cpu->zero is: %x\n", cpu->zero);
-	return cpu->zero;
+	if (cpu->alu->r == 0){
+		cpu->sw = 0x0001;
+	}
+	else if(cpu->alu->r > 0){
+		cpu->sw = 0x0010;
+	}else{
+		cpu->sw = 0x0100;
+	}
+	return cpu->sw;
 }
 
 void debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
@@ -310,12 +326,12 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case LDR:
 						break;
 					case LEA:
+						RD = getRD(cpu);
+						cpu->sext = signExtend(cpu,9);
 						break;
 					case NOT:
 						RD = getRD(cpu);
 						RS = getRS(cpu);
-						break;
-					case RET:
 						break;
 					case ST:
 						RD = getRD(cpu);
@@ -362,10 +378,9 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case LDR:
 						break;
 					case LEA:
+						cpu->mar = cpu->pc + cpu->sext;
 						break;
 					case NOT:
-						break;
-					case RET:
 						break;
 					case ST:
 						cpu->mar = cpu->pc + cpu->sext;
@@ -407,11 +422,9 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case LDR:
 						break;
 					case LEA:
+						cpu->mdr = cpu->mar;
 						break;
 					case NOT:
-						break;
-					case RET:
-						cpu->mdr = cpu->reg_file[RET_REG];
 						break;
 					case ST:
 						//Same as below
@@ -475,9 +488,14 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						}
 						break;
 					case LEA:
+<<<<<<< HEAD
 						if (R7_flag == 1) {
 							cpu -> pc = cpu -> reg_file[7];
 						}
+=======
+						cpu->reg_file[RD] = cpu->mdr;
+						setcc(cpu);
+>>>>>>> origin/master
 						break;
 					case NOT:
 <<<<<<< HEAD
@@ -506,9 +524,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						}
 =======
 						cpu->mdr = ~(RS);
-						break;
-					case RET:
-						cpu->pc = cpu->mdr;
 						break;
 					case ST:
 						//Same as below
@@ -554,8 +569,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						break;
 					case NOT:
 						cpu->reg_file[RD] = cpu->mdr;
-						break;
-					case RET:
 						break;
 					case ST:
 						//Unused
