@@ -82,6 +82,12 @@ Register getRS (CPU_p cpu) {
 	return (Register) temp;
 }
 
+Register getS2 (CPU_p cpu) {
+	if (cpu == NULL) return POINTER_ERROR;
+	Register temp = cpu->ir & S2_MASK;
+	return (Register) temp;
+}
+
 Register getBit5 (CPU_p cpu) {
 	if (cpu == NULL) return POINTER_ERROR;
 	Register temp = cpu->ir & BIT_FIVE;
@@ -190,7 +196,7 @@ Register zeroExtend(CPU_p cpu){
 	A function to flag whether cpu->alu->r is set to 0 or some other value.  Used 
 	for determining if the system should perform a break operation.
 */
-Register setcc (CPU_p cpu) {
+void setcc (CPU_p cpu) {
 	if (cpu == NULL) return POINTER_ERROR;
 	if (cpu->alu->r == 0){
 		cpu->sw = 0x0001;
@@ -200,7 +206,6 @@ Register setcc (CPU_p cpu) {
 	}else{
 		cpu->sw = 0x0100;
 	}
-	return cpu->sw;
 }
 
 void debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
@@ -268,7 +273,7 @@ Byte getNZP(Register opcode) {
 
 int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 	//Initiate varibles.
-	Byte RD, RS, nzp_flag, offset, nzp_switch = 0, R7_flag = 0;
+	Byte RD, RS, S2, nzp_flag, offset, nzp_switch = 0, R7_flag = 0, bit5;
 	//nzp_flag is used by branch case; nzp_switch is used by switching opcodes such as ADD, ADI, ect...
 	//R7 Flag should be checked in each case to see if you need to return to R7 if JSR was taken.
 	Register opcode = 0;
@@ -305,6 +310,20 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
    					case HALT:
 						break;
 					case ADD:
+						bit5 = getBit5(cpu);
+						/* First get the 5th bit.*/
+						if (bit5 > 0) { 
+						/* If bit is set, call signExtend to get the 5-bit 
+						immediate value.*/
+							RD = getRD(cpu);
+							RS = getRS(cpu);
+							cpu->sext = signExtend(cpu,5);
+						} else { 
+						/* Otherwise, capture destination, and source 1 and 2 registers.*/
+							RD = getRD(cpu);
+							RS = getRS(cpu);
+							S2 = getS2(cpu);
+							}
 						break;
 					case AND:
 						break;
@@ -360,28 +379,28 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				the array of Registers in the CPU, or memory locations.
 				*/
 				switch (opcode) {
-					case HALT:
+					case HALT: //No operation required.
 						break;
-					case ADD:
+					case ADD: //No operation required.
 						break;
-					case AND:
+					case AND: //No operation required.
 						break;
-					case BRnzp:
+					case BRnzp: //No operation required.
 						break;
-					case JMP:
+					case JMP: //No operation required.
 						break;
-					case JSR:
+					case JSR: //No operation required.
 						break;
-					case LD:
+					case LD: //No operation required.
 						break;
-					case LDI:
+					case LDI: //No operation required.
 						break;
-					case LDR:
+					case LDR: //No operation required.
 						break;
 					case LEA:
 						cpu->mar = cpu->pc + cpu->sext;
 						break;
-					case NOT:
+					case NOT: //No operation required.
 						break;
 					case ST:
 						cpu->mar = cpu->pc + cpu->sext;
@@ -392,7 +411,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case STR:
 						cpu->mar = cpu->reg_file[RS] + cpu->sext;
 						break;
-					case TRAP:
+					case TRAP: //No operation required.
 						break;
 					default:
 						break;
@@ -407,6 +426,17 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case HALT:
 						break;
 					case ADD:
+					if (bit5 > 0) {
+					/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
+					alu->b with cpu->sext.*/
+						alu->a = cpu-reg_file(RS)
+						alu->b = cpu->sext;
+					} else {
+					/* Otherwise, alu->a is loaded with cpu->reg_file[RS],
+					alu->b with cpu->reg_file[S2].*/
+						alu->a = cpu->reg_file[RS];
+						alu->b = cpu->reg_file[S2];
+					}
 						break;
 					case AND:
 						break;
@@ -446,6 +476,11 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case HALT:
 						break;
 					case ADD:
+					/* Add a and b and place the result in alu->r.  Call setcc
+					to load cpu->sw with the correct bits based on the whether the
+					result of the addition is positive, negative or zero.*/
+						alu->r = alu->a + alu->b;
+						setcc(cpu);
 						if (R7_flag == 1) {
 							cpu -> pc = cpu -> reg_file[7];
 						}
@@ -551,6 +586,8 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case HALT:
 						break;
 					case ADD:
+					/* Load reg_file[RD] with the value in alu->r.*/
+					cpu->reg_file[RD] = alu->r;
 						break;
 					case AND:
 						break;
