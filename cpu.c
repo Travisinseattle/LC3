@@ -326,6 +326,20 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 							}
 						break;
 					case AND:
+						bit5 = getBit5(cpu);
+						/* First get the 5th bit.*/
+						if (bit5 > 0) { 
+						/* If bit is set, call signExtend to get the 5-bit 
+						immediate value.*/
+							RD = getRD(cpu);
+							RS = getRS(cpu);
+							cpu->sext = signExtend(cpu,5);
+						} else { 
+						/* Otherwise, capture destination, and source 1 and 2 registers.*/
+							RD = getRD(cpu);
+							RS = getRS(cpu);
+							S2 = getS2(cpu);
+							}
 						break;
 					case BRnzp:
 						nzp_flag = getNZP(opcode);
@@ -439,6 +453,17 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					}
 						break;
 					case AND:
+					if (bit5 > 0) {
+					/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
+					alu->b with cpu->sext.*/
+						alu->a = cpu-reg_file(RS)
+						alu->b = cpu->sext;
+					} else {
+					/* Otherwise, alu->a is loaded with cpu->reg_file[RS],
+					alu->b with cpu->reg_file[S2].*/
+						alu->a = cpu->reg_file[RS];
+						alu->b = cpu->reg_file[S2];
+					}
 						break;
 					case BRnzp:
 						break;
@@ -486,6 +511,11 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						}
 						break;
 					case AND:
+					/* And a and b and place the result in alu->r.  Call setcc
+					to load cpu->sw with the correct bits based on the whether the
+					result of the addition is positive, negative or zero.*/
+						alu->r = alu->a & alu->b;
+						setcc(cpu);
 						if (R7_flag == 1) {
 							cpu -> pc = cpu -> reg_file[7];
 						}
