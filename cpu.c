@@ -258,6 +258,7 @@ void interpreter(unsigned short mem[MEM_SIZE]) {
 		counter++;
 	} while (mem[counter-1] != NULL);
 	fclose(infile);
+   //Commands actually start at mem[1], first index is the .orig
 }
 
 Byte getNZP(Register opcode) {
@@ -554,10 +555,13 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case AND:
 						break;
 					case BRnzp:
+               //Unused
 						break;
 					case JMP:
+               //Unused
 						break;
 					case JSR:
+               //Unused
 						break;
 					case LD:
 						break;
