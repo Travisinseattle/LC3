@@ -325,8 +325,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				/* Parse the Opcode and store the result using getOPCODE() function. */
 				opcode = getOPCODE(cpu);
 				switch (opcode) {
-   					case HALT:
-						break;
 					case ADD:
 						bit5 = getBit5(cpu);
 						/* First get the 5th bit.*/
@@ -417,8 +415,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				the array of Registers in the CPU, or memory locations.
 				*/
 				switch (opcode) {
-					case HALT: //No operation required.
-						break;
 					case ADD: //No operation required.
 						break;
 					case AND: //No operation required.
@@ -496,8 +492,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				the array of registers in the CPU, or from cpu->sext values, ect.
 				*/
 				switch (opcode) {
-					case HALT:  //No operation required.
-						break;
 					case ADD:
 						if (bit5 > 0) {
 						/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
@@ -566,8 +560,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				break;
 			case EXECUTE:
 				switch (opcode) {
-					case HALT:
-						break;
 					case ADD:
 					/* Add a and b and place the result in alu->r.  Call setcc
 					to load cpu->sw with the correct bits based on the whether the
@@ -664,8 +656,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				/* Finalize the operation by either moving the result to the RD register, or loading/storing
 					to memory.  */
 				switch (opcode) {
-					case HALT:  //No operation required.
-						break;
 					case ADD:
 					/* Load reg_file[RD] with the value in alu->r.*/
 					cpu->reg_file[RD] = alu->r;
