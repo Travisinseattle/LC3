@@ -493,9 +493,12 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						cpu->mdr = mem[cpu->mar];
 						break;
 					case LDI:
-					/* Load the cpu->mdr with the data found at the memory index of cpu->mar. */
+					/* Load the cpu->mdr with the data found at the memory index of cpu->mar.
+					Set cpu->mar to the value of cpu->mdr.  Load cpu->mdr with data found at 
+					mem[cpu->mar]. */
 						cpu->mdr = mem[cpu->mar];
 						cpu->mar = cpu->mdr;
+						cpu->mdr = mem[cpu->mar];
 						break;
 					case LDR:  //No operation required.
 						break;
@@ -638,7 +641,9 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					/*Load the target register with the data in cpu->mdr. */
 						cpu->reg_file[RD] = cpu->mdr;
 						break;
-					case LDI:  //No operation required.
+					case LDI:
+					/*Load the target register with the data in cpu->mdr. */
+						cpu->reg_file[RD] = cpu->mdr;
 						break;
 					case LDR:  //No operation required.
 						break;
