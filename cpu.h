@@ -78,8 +78,8 @@ Register getRS (CPU_p cpu);
 void loadRegisters(CPU_p cpu, Register reg1, Register reg2);
 Register signExtend(CPU_p cpu, int len);
 Byte setZeroFlag (CPU_p cpu);
-void debug (CPU_p cpu, unsigned short mem[MEM_SIZE]);
-void loadMemory(unsigned short mem[MEM_SIZE]);
+int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]);
+void loadMemory(CPU_p cpu, unsigned short mem[MEM_SIZE]);
 int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value);
 void saveMemory(unsigned short mem[MEM_SIZE]);
 #endif
