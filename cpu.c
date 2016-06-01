@@ -356,6 +356,9 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						cpu->sext = signExtend(cpu, 9);
 						break;
 					case LDR:
+						RD = getRD(cpu);
+						RS = getRS(cpu);
+						cpu->sext = signExtend(cpu, 6);
 						break;
 					case LEA:
 						RD = getRD(cpu);
@@ -425,7 +428,16 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						cpu->mar = alu->r;
 						setcc(cpu);
 						break;
-					case LDR: //No operation required.
+					case LDR:
+					/* In order to evaluate the value to placed in cpu->mar, first load
+					the adder with the cpu->reg_file[RS] and cpu->sext and then add them together.
+					Then load cpu-mar with the result.  Finally, evaluate the result for
+					positive/negative/zero and set the cpu->sw using setcc().*/
+						alu->a = cpu->reg_file[RS];
+						alu->b = cpu->sext;
+						alu->r = alu->a + alu->b;
+						cpu->mar = alu->r;
+						setcc(cpu);
 						break;
 					case LEA:
 						cpu->mar = cpu->pc + cpu->sext;
@@ -500,7 +512,9 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						cpu->mar = cpu->mdr;
 						cpu->mdr = mem[cpu->mar];
 						break;
-					case LDR:  //No operation required.
+					case LDR:
+					/* Load the cpu->mdr with the data found at the memory index of cpu->mar. */
+						cpu->mdr = mem[cpu->mar];
 						break;
 					case LEA:
 						cpu->mdr = cpu->mar;
@@ -645,7 +659,9 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					/*Load the target register with the data in cpu->mdr. */
 						cpu->reg_file[RD] = cpu->mdr;
 						break;
-					case LDR:  //No operation required.
+					case LDR:
+					/*Load the target register with the data in cpu->mdr. */
+						cpu->reg_file[RD] = cpu->mdr;
 						break;
 					case LEA:  //No operation required.
 						break;
