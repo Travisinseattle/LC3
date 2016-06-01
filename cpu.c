@@ -178,7 +178,6 @@ Register signExtend(CPU_p cpu, int len) {
   
   return val;
 }
-<<<<<<< HEAD
 
 /* setZeroFlag
 =======
@@ -197,7 +196,6 @@ Register zeroExtend(CPU_p cpu){
 	for determining if the system should perform a break operation.
 */
 void setcc (CPU_p cpu) {
-	if (cpu == NULL) return POINTER_ERROR;
 	if (cpu->alu->r == 0){
 		cpu->sw = 0x0001;
 	}
@@ -261,7 +259,7 @@ void interpreter(unsigned short mem[MEM_SIZE]) {
 	do {
 		fscanf(infile, "%u", mem[counter]);
 		counter++;
-	} while (mem[counter-1] != NULL);
+	} while (counter < MEM_SIZE);
 	fclose(infile);
    //Commands actually start at mem[1], first index is the .orig
 }
@@ -436,6 +434,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						cpu->mar = cpu->pc + cpu->sext;
 						break;
 					case NOT: //No operation required.
+						cpu->alu->a = cpu->reg_file[RS];
 						break;
 					case ST:
 						cpu->mar = cpu->pc + cpu->sext;
@@ -590,6 +589,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						if (R7_flag == 1) {
 							cpu -> pc = cpu -> reg_file[7];
 						}
+						cpu->alu->r = ~(cpu->alu->a);
 						break;
 					case RET:
 						if (R7_flag == 1) {
@@ -660,7 +660,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case LEA:  //No operation required.
 						break;
 					case NOT:
-						cpu->reg_file[RD] = cpu->mdr;
+						cpu->reg_file[RD] = cpu->alu->r;
 						break;
 					case ST:  //No operation required.
 						break;
