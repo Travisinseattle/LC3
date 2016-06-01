@@ -343,7 +343,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						break;
 					case BRnzp:
 						nzp_flag = getNZP(opcode);
-						//No Further Actions;
 						break;
 					case JMP:
 						offset = get9Offset(cpu);
@@ -358,6 +357,8 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						cpu->sext = signExtend(cpu, 9);
 						break;
 					case LDI:
+						RD = getRD(cpu);
+						cpu->sext = signExtend(cpu, 9);
 						break;
 					case LDR:
 						break;
@@ -418,7 +419,16 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						cpu->mar = alu->r;
 						setcc(cpu);
 						break;
-					case LDI: //No operation required.
+					case LDI:
+					/* In order to evaluate the value to placed in cpu->mar, first load
+					the adder with the cpu->pc and cpu->sext and then add them together.
+					Then load cpu-mar with the result.  Finally, evaluate the result for
+					positive/negative/zero and set the cpu->sw using setcc().*/
+						alu->a = cpu->pc;
+						alu->b = cpu->sext;
+						alu->r = alu->a + alu->b;
+						cpu->mar = alu->r;
+						setcc(cpu);
 						break;
 					case LDR: //No operation required.
 						break;
@@ -454,7 +464,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						if (bit5 > 0) {
 						/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
 						alu->b with cpu->sext.*/
-							alu->a = cpu-reg_file(RS)
+							alu->a = cpu->reg_file[RS];
 							alu->b = cpu->sext;
 						} else {
 						/* Otherwise, alu->a is loaded with cpu->reg_file[RS],
@@ -467,7 +477,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						if (bit5 > 0) {
 						/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
 						alu->b with cpu->sext.*/
-							alu->a = cpu-reg_file(RS)
+							alu->a = cpu->reg_file[RS];
 							alu->b = cpu->sext;
 						} else {
 						/* Otherwise, alu->a is loaded with cpu->reg_file[RS],
@@ -486,7 +496,10 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					/* Load the cpu->mdr with the data found at the memory index of cpu->mar. */
 						cpu->mdr = mem[cpu->mar];
 						break;
-					case LDI:  //No operation required.
+					case LDI:
+					/* Load the cpu->mdr with the data found at the memory index of cpu->mar. */
+						cpu->mdr = mem[cpu->mar];
+						cpu->mar = cpu->mdr;
 						break;
 					case LDR:  //No operation required.
 						break;
@@ -567,17 +580,13 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						}
 						break;
 					case LEA:
-<<<<<<< HEAD
 						if (R7_flag == 1) {
 							cpu -> pc = cpu -> reg_file[7];
 						}
-=======
 						cpu->reg_file[RD] = cpu->mdr;
 						setcc(cpu);
->>>>>>> origin/master
 						break;
 					case NOT:
-<<<<<<< HEAD
 						if (R7_flag == 1) {
 							cpu -> pc = cpu -> reg_file[7];
 						}
@@ -601,7 +610,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						if (R7_flag == 1) {
 							cpu -> pc = cpu -> reg_file[7];
 						}
-=======
 						cpu->mdr = ~(RS);
 						break;
 					case ST:  //No operation required.
@@ -610,7 +618,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						break;
 					case STR:
 						mem[cpu->mar]=cpu->mdr;
->>>>>>> origin/master
 						break;
 					case TRAP:
 						if (R7_flag == 1) {
