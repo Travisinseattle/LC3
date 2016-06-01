@@ -18,6 +18,7 @@
 #define OPCODE_MASK 0xF000
 #define RD_MASK 0x0E00
 #define RS_MASK 0x01C0
+#define S2_MASK	0x0007
 #define IMMED_MASK_5 0x003F
 #define IMMED_MASK_6 0x003F
 #define IMMED_MASK_8 0x00FF
