@@ -291,8 +291,8 @@ Byte getNZP(Register opcode) {
 
 int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 	//Initiate varibles.
-	Byte RD, RS, S2, nzp_flag, offset, nzp_switch = 0, R7_flag = 0, bit5;
-	//nzp_flag is used by branch case; nzp_switch is used by switching opcodes such as ADD, ADI, ect...
+	Byte RD, RS, S2, nzp_flag, offset, R7_flag = 0, bit5;
+	//nzp_flag is used by branch case; 
 	//R7 Flag should be checked in each case to see if you need to return to R7 if JSR was taken.
 	Register opcode = 0;
 	Register branch_taken_addr;
@@ -359,6 +359,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						break;
 					case BRnzp:
 						nzp_flag = getNZP(opcode);
+						cpu->sext = signExtend(cpu, 9);
 						break;
 					case JMP:
 						offset = get9Offset(cpu);
@@ -419,7 +420,11 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						break;
 					case AND: //No operation required.
 						break;
-					case BRnzp: //No operation required.
+					case BRnzp:
+					/*Evaluate the address and store result in alu->r for use if branch is taken. */
+						alu->a = cpu->pc;
+						alu->b = cpu->sext;
+						alu->r = alu->a + alu->b;
 						break;
 					case JMP: //No operation required.
 						break;
@@ -581,14 +586,10 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						}
 						break;
 					case BRnzp:
-						if ((nzp_flag == 1  || nzp_flag == 3 || nzp_flag == 5)&& nzp_switch == 1) {
-							cpu -> pc = cpu -> pc + signExtend(cpu, 9);
-						} else if ((nzp_flag == 2 || nzp_flag == 3 || nzp_flag == 6) && nzp_switch == 2){
-							cpu -> pc = cpu -> pc + signExtend(cpu, 9);
-						} else if ((nzp_flag == 4 || nzp_flag == 5 || nzp_flag == 6) && nzp_switch == 4){
-							cpu -> pc = cpu -> pc + signExtend(cpu, 9);
-						} else if (nzp_flag == 7) {
-							cpu -> pc = cpu -> pc + signExtend(cpu, 9);
+						if ((nzp_flag == 1 && cpu->sw == 1) ||
+						(nzp_flag == 2 && cpu->sw == 2) ||
+						(nzp_flag == 4  && cpu->sw == 4)) {
+							cpu->pc = alu->r;
 						}
 						break;
 					case JMP:
