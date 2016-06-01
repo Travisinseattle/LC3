@@ -19,6 +19,7 @@
 #define RD_MASK 0x0E00
 #define RS_MASK 0x01C0
 #define S2_MASK	0x0007
+#define MEM_SIZE 100
 #define IMMED_MASK_5 0x003F
 #define IMMED_MASK_6 0x003F
 #define IMMED_MASK_8 0x00FF
@@ -77,8 +78,8 @@ Register getRS (CPU_p cpu);
 void loadRegisters(CPU_p cpu, Register reg1, Register reg2);
 Register signExtend(CPU_p cpu, int len);
 Byte setZeroFlag (CPU_p cpu);
-void debug (CPU_p cpu, unsigned short mem[32]);
-void loadMemory(unsigned short mem[32]);
-int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value);
+void debug (CPU_p cpu, unsigned short mem[MEM_SIZE]);
+void loadMemory(unsigned short mem[MEM_SIZE]);
+int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value);
 
 #endif
