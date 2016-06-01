@@ -430,9 +430,9 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						break;
 					case LDR:
 					/* In order to evaluate the value to placed in cpu->mar, first load
-					the adder with the cpu->reg_file[RS] and cpu->sext and then add them together.
-					Then load cpu-mar with the result.  Finally, evaluate the result for
-					positive/negative/zero and set the cpu->sw using setcc().*/
+					the adder with the cpu->reg_file[RS] and cpu->sext and then add them
+					together. Then load cpu-mar with the result.  Finally, evaluate the
+					result for positive/negative/zero and set the cpu->sw using setcc().*/
 						alu->a = cpu->reg_file[RS];
 						alu->b = cpu->sext;
 						alu->r = alu->a + alu->b;
@@ -440,7 +440,14 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						setcc(cpu);
 						break;
 					case LEA:
-						cpu->mar = cpu->pc + cpu->sext;
+					/* In order to evaluate the value to be placed in the RD, first load
+					the adder with the cpu->pc and cpu->sext and then add them together.
+					Finally, evaluate the result for positive/negative/zero and set the 
+					cpu->sw using setcc().*/
+						alu->a = cpu->pc;
+						alu->b = cpu->sext;
+						alu->r = alu->a + alu->b;
+						setcc(cpu);
 						break;
 					case NOT: //No operation required.
 						cpu->alu->a = cpu->reg_file[RS];
@@ -516,8 +523,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					/* Load the cpu->mdr with the data found at the memory index of cpu->mar. */
 						cpu->mdr = mem[cpu->mar];
 						break;
-					case LEA:
-						cpu->mdr = cpu->mar;
+					case LEA:  //No operation required.
 						break;
 					case NOT:  //No operation required.
 						break;
@@ -663,9 +669,12 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					/*Load the target register with the data in cpu->mdr. */
 						cpu->reg_file[RD] = cpu->mdr;
 						break;
-					case LEA:  //No operation required.
+					case LEA:
+					/*Load the target register with the value of alu->r. */
+						cpu->reg_file[RD] = cpu->alu->r;
 						break;
-					case NOT:
+					case NOT
+					/*Load the target register with the value of alu->r. */
 						cpu->reg_file[RD] = cpu->alu->r;
 						break;
 					case ST:  //No operation required.
