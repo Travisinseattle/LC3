@@ -354,6 +354,8 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						R7_flag = 1;
 						break;
 					case LD:
+						RD = getRD(cpu);
+						cpu->sext = signExtend(cpu, 9);
 						break;
 					case LDI:
 						break;
@@ -380,7 +382,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						RS = getRS(cpu);
 						cpu->sext = signExtend(cpu,6);
 						break;
-					case TRAP:
+					case TRAP:  //No operation required.
 						break;
 					default:
 						break;
@@ -405,7 +407,16 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						break;
 					case JSR: //No operation required.
 						break;
-					case LD: //No operation required.
+					case LD:
+					/* In order to evaluate the value to placed in cpu->mar, first load
+					the adder with the cpu->pc and cpu->sext and then add them together.
+					Then load cpu-mar with the result.  Finally, evaluate the result for
+					positive/negative/zero and set the cpu->sw using setcc().*/
+						alu->a = cpu->pc;
+						alu->b = cpu->sext;
+						alu->r = alu->a + alu->b;
+						cpu->mar = alu->r;
+						setcc(cpu);
 						break;
 					case LDI: //No operation required.
 						break;
@@ -437,59 +448,61 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				the array of registers in the CPU, or from cpu->sext values, ect.
 				*/
 				switch (opcode) {
-					case HALT:
+					case HALT:  //No operation required.
 						break;
 					case ADD:
-					if (bit5 > 0) {
-					/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
-					alu->b with cpu->sext.*/
-						alu->a = cpu-reg_file(RS)
-						alu->b = cpu->sext;
-					} else {
-					/* Otherwise, alu->a is loaded with cpu->reg_file[RS],
-					alu->b with cpu->reg_file[S2].*/
-						alu->a = cpu->reg_file[RS];
-						alu->b = cpu->reg_file[S2];
-					}
+						if (bit5 > 0) {
+						/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
+						alu->b with cpu->sext.*/
+							alu->a = cpu-reg_file(RS)
+							alu->b = cpu->sext;
+						} else {
+						/* Otherwise, alu->a is loaded with cpu->reg_file[RS],
+						alu->b with cpu->reg_file[S2].*/
+							alu->a = cpu->reg_file[RS];
+							alu->b = cpu->reg_file[S2];
+						}
 						break;
 					case AND:
-					if (bit5 > 0) {
-					/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
-					alu->b with cpu->sext.*/
-						alu->a = cpu-reg_file(RS)
-						alu->b = cpu->sext;
-					} else {
-					/* Otherwise, alu->a is loaded with cpu->reg_file[RS],
-					alu->b with cpu->reg_file[S2].*/
-						alu->a = cpu->reg_file[RS];
-						alu->b = cpu->reg_file[S2];
-					}
+						if (bit5 > 0) {
+						/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
+						alu->b with cpu->sext.*/
+							alu->a = cpu-reg_file(RS)
+							alu->b = cpu->sext;
+						} else {
+						/* Otherwise, alu->a is loaded with cpu->reg_file[RS],
+						alu->b with cpu->reg_file[S2].*/
+							alu->a = cpu->reg_file[RS];
+							alu->b = cpu->reg_file[S2];
+						}
 						break;
-					case BRnzp:
+					case BRnzp:  //No operation required.
 						break;
-					case JMP:
+					case JMP:  //No operation required.
 						break;
-					case JSR:
+					case JSR:  //No operation required.
 						break;
 					case LD:
+					/* Load the cpu->mdr with the data found at the memory index of cpu->mar. */
+						cpu->mdr = mem[cpu->mar];
 						break;
-					case LDI:
+					case LDI:  //No operation required.
 						break;
-					case LDR:
+					case LDR:  //No operation required.
 						break;
 					case LEA:
 						cpu->mdr = cpu->mar;
 						break;
-					case NOT:
+					case NOT:  //No operation required.
 						break;
-					case ST:
-						//Same as below
-					case STI:
-						//Same as below
+					case ST:  //No operation required.
+						break;
+					case STI:  //No operation required.
+						break;
 					case STR:
 						cpu->mdr = cpu->reg_file[RD];
 						break;
-					case TRAP:
+					case TRAP:  //No operation required.
 						break;
 					default:
 						break;
@@ -591,10 +604,10 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 =======
 						cpu->mdr = ~(RS);
 						break;
-					case ST:
-						//Same as below
-					case STI:
-						//Same as below
+					case ST:  //No operation required.
+						break;
+					case STI:  //No operation required.
+						break;
 					case STR:
 						mem[cpu->mar]=cpu->mdr;
 >>>>>>> origin/master
@@ -613,44 +626,42 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				/* Finalize the operation by either moving the result to the RD register, or loading/storing
 					to memory.  */
 				switch (opcode) {
-					case HALT:
+					case HALT:  //No operation required.
 						break;
 					case ADD:
 					/* Load reg_file[RD] with the value in alu->r.*/
 					cpu->reg_file[RD] = alu->r;
 						break;
 					case AND:
+					/* Load reg_file[RD] with the value in alu->r.*/
+					cpu->reg_file[RD] = alu->r;
 						break;
-					case BRnzp:
-               //Unused
+					case BRnzp:  //No operation required.
 						break;
-					case JMP:
-               //Unused
+					case JMP;  //No operation required.
 						break;
-					case JSR:
-               //Unused
+					case JSR:  //No operation required.
 						break;
 					case LD:
+					/*Load the target register with the data in cpu->mdr. */
+						cpu->reg_file[RD] = cpu->mdr;
 						break;
-					case LDI:
+					case LDI:  //No operation required.
 						break;
-					case LDR:
+					case LDR:  //No operation required.
 						break;
-					case LEA:
+					case LEA:  //No operation required.
 						break;
 					case NOT:
 						cpu->reg_file[RD] = cpu->mdr;
 						break;
-					case ST:
-						//Unused
+					case ST:  //No operation required.
 						break;
-					case STI:
-						//Unused
+					case STI:  //No operation required.
 						break;
-					case STR:
-						//Unused
+					case STR:  //No operation required.
 						break;
-					case TRAP:
+					case TRAP:  //No operation required.
 						break;
 					default:
 						break;
