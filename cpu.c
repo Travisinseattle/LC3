@@ -696,7 +696,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					/*Load the target register with the value of alu->r. */
 						cpu->reg_file[RD] = cpu->alu->r;
 						break;
-					case NOT
+					case NOT:
 					/*Load the target register with the value of alu->r. */
 						cpu->reg_file[RD] = cpu->alu->r;
 						break;
