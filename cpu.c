@@ -213,15 +213,14 @@ void debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
    printf("Registers				Memory\n");
 	printf("=============================================================\n");
    for (counter = 0; counter < 8; counter++) {
-      printf("R%d: %x   %04x: %x %x\n", counter, cpu ->reg_file[0]);
+      printf("R%d: %X   		", counter, cpu ->reg_file[0]);
+	  printf("Memory: %04X: %04X  %04X: %04X\n", memory, mem[memory],memory+1, mem[memory+1]);
+	  memory+=2;
    }
-   printf("\nMemory Space: \n");
    printf("=============================================================\n");
-   for (memory = 0; memory < MEM_SIZE; memory++){
-      printf("Memory: %04x: %x\n", memory, mem[memory]);
-   }
-	printf("PC: %x		SW: %x		IR: %x\n\n", cpu->pc, cpu->sw, cpu->ir);
+	printf("PC: %04X		SW: %04X		IR: %04X\n\n", cpu->pc, cpu->sw, cpu->ir);
 	//Capture menu choices.
+	printf("1)Load\n2)Save\n3)Run\n4)Step\n5)Dump\n6)Fill\nSelect a menu choice: ");
 	scanf("%d", &menu);
     getchar();
 	
@@ -233,12 +232,13 @@ void debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
 			saveMemory(mem);
 			break;
 		case 3:  //Run a program.
-			
+			controller(cpu,mem,0);
 			break;
 		case 4:  //return from function.
-			return;
+			controller(cpu,mem,1);
 			break;
 		case 5:  //Dump the memory.
+			//memoryDump(mem);
 			break;
 		case 6:  //Fill the memory.
 			break;
@@ -255,12 +255,21 @@ void debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
 */
 void loadMemory(unsigned short mem[MEM_SIZE]) {
 	FILE *infile;
-	infile = fopen("memory.hex", "r");
-	int counter = 0;
+	printf("Input file name to load: ");
+	char fileName[50];
+	scanf("%s",fileName);
+	printf("%s\n",fileName);
+	infile = fopen(fileName, "rw");
+	printf("File opened\n");
+	int counter;
+	fscanf(infile,"%d",&counter);
+	printf("Read counter! %04X\n",counter);
+	int done;
 	do {
-		fscanf(infile, "%u", mem[counter]);
+		printf("Trying to read\n");
+		done = fscanf(infile, "%u", &mem[counter]);
 		counter++;
-	} while (counter < MEM_SIZE);
+	} while (done!=EOF);
 	fclose(infile);
    //Commands actually start at mem[1], first index is the .orig
 }
@@ -271,18 +280,22 @@ void loadMemory(unsigned short mem[MEM_SIZE]) {
 */
 void saveMemory(unsigned short mem[MEM_SIZE]){
 	FILE *outfile;
+	printf("Input file name to save to: ");
 	char fileName[50];
 	scanf("%s",fileName);
 	outfile = fopen(fileName, "w");
 	int i;
+	printf("\nInput starting memory address to save: ");
 	scanf("%X",i);
 	int z;
+	printf("\nInput number of memory addresses to save: ");
 	scanf("%d",z);
 	for(;i<z;i++){
 		fprintf(outfile,"%X",mem[i]);
 	}
 	fclose(outfile);
 }
+
 
 Byte getNZP(Register opcode) {
 	Byte nzp = opcode >> 9;
