@@ -262,14 +262,12 @@ void loadMemory(unsigned short mem[MEM_SIZE]) {
 	infile = fopen(fileName, "rw");
 	printf("File opened\n");
 	int counter;
-	fscanf(infile,"%d",&counter);
+	fscanf(infile,"%X",&counter);
 	printf("Read counter! %04X\n",counter);
-	int done;
-	do {
-		printf("Trying to read\n");
-		done = fscanf(infile, "%u", &mem[counter]);
+	while(fscanf(infile, "%X", &mem[counter])!=-1){
+		printf("Trying to read\n %04X",counter);
 		counter++;
-	} while (done!=EOF);
+	} 
 	fclose(infile);
    //Commands actually start at mem[1], first index is the .orig
 }
