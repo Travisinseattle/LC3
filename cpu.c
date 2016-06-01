@@ -304,11 +304,9 @@ Byte getNZP(Register opcode) {
 
 int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 	//Initiate varibles.
-	Byte RD, RS, S2, nzp_flag, offset, R7_flag = 0, bit5, bit11;
-	//nzp_flag is used by branch case; 
-	//R7 Flag should be checked in each case to see if you need to return to R7 if JSR was taken.
+	Byte RD, RS, S2, nzp_flag, bit5, bit11;
+	//nzp_flag is used by branch case;
 	Register opcode = 0;
-	Register branch_taken_addr;
 	Register TEMP;
 	ALU_p alu = cpu->alu;
 	
