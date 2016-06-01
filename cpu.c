@@ -227,12 +227,16 @@ void debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
 	
 	switch (menu) {
 		case 1:  //Load a program.
+			loadMemory(mem);
 			break;
 		case 2:  //Save a program.
+			saveMemory(mem);
 			break;
 		case 3:  //Run a program.
+			
 			break;
 		case 4:  //return from function.
+			return;
 			break;
 		case 5:  //Dump the memory.
 			break;
@@ -259,6 +263,25 @@ void loadMemory(unsigned short mem[MEM_SIZE]) {
 	} while (counter < MEM_SIZE);
 	fclose(infile);
    //Commands actually start at mem[1], first index is the .orig
+}
+
+/* saveMemory
+	This function saves the current memory to a file, 
+	allowing programs to be saved.
+*/
+void saveMemory(unsigned short mem[MEM_SIZE]){
+	FILE *outfile;
+	char fileName[50];
+	scanf("%s",fileName);
+	outfile = fopen(fileName, "w");
+	int i;
+	scanf("%X",i);
+	int z;
+	scanf("%d",z);
+	for(;i<z;i++){
+		fprintf(outfile,"%X",mem[i]);
+	}
+	fclose(outfile);
 }
 
 Byte getNZP(Register opcode) {
