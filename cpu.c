@@ -291,11 +291,12 @@ Byte getNZP(Register opcode) {
 
 int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 	//Initiate varibles.
-	Byte RD, RS, S2, nzp_flag, offset, R7_flag = 0, bit5;
+	Byte RD, RS, S2, nzp_flag, offset, R7_flag = 0, bit5, bit11;
 	//nzp_flag is used by branch case; 
 	//R7 Flag should be checked in each case to see if you need to return to R7 if JSR was taken.
 	Register opcode = 0;
 	Register branch_taken_addr;
+	Register TEMP;
 	ALU_p alu = cpu->alu;
 	
     int state = FETCH;
@@ -362,12 +363,18 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						cpu->sext = signExtend(cpu, 9);
 						break;
 					case JMP:
-						offset = get9Offset(cpu);
+						RS = getRS(cpu);
 						break;
 					case JSR:
-						cpu -> reg_file[7] = cpu -> pc;
-						cpu += get11Offset(cpu);
-						R7_flag = 1;
+						TEMP = cpu->pc;
+						bit11 = getBit11(cpu);
+						if (bit11 > 0) {
+							/*JSR case: Load cpu->sext with offset11. */
+							cpu->sext = signExtend(cpu, 11);
+						} else {
+							/*JSRR case: Capture the base register. */
+							RS = getRS(cpu);
+						}
 						break;
 					case LD:
 						RD = getRD(cpu);
@@ -428,7 +435,15 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						break;
 					case JMP: //No operation required.
 						break;
-					case JSR: //No operation required.
+					case JSR:
+					/*JSR Case: if bit11 is set, evaluate the address of the new pc by loading
+					the alu->a with cpu->pc and alu->b with cpu->sext and adding them together.  Store
+					result in alu->r.*/
+						if (bit11 > 0) {
+							alu->a = cpu->pc;
+							alu->b = cpu->sext;
+							alu->r = alu->a + alu->b;
+						}
 						break;
 					case LD:
 					/* In order to evaluate the value to placed in cpu->mar, first load
@@ -571,9 +586,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					result of the addition is positive, negative or zero.*/
 						alu->r = alu->a + alu->b;
 						setcc(cpu);
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case AND:
 					/* And a and b and place the result in alu->r.  Call setcc
@@ -581,9 +593,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					result of the addition is positive, negative or zero.*/
 						alu->r = alu->a & alu->b;
 						setcc(cpu);
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case BRnzp:
 						if ((nzp_flag == 1 && cpu->sw == 1) ||
@@ -593,60 +602,30 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						}
 						break;
 					case JMP:
-						cpu -> pc = getRS(cpu);
-						state = FETCH;
 						break;
 					case JSR:
-						state = FETCH;
 						break;
 					case LD:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case LDI:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case LDR:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case LEA:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						cpu->reg_file[RD] = cpu->mdr;
 						setcc(cpu);
 						break;
 					case NOT:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						cpu->alu->r = ~(cpu->alu->a);
 						break;
 					case ST:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case STI:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case STR:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						mem[cpu->mar]=cpu->mdr;
 						break;
 					case TRAP:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					default:
 						break;
@@ -667,9 +646,24 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						break;
 					case BRnzp:  //No operation required.
 						break;
-					case JMP:  //No operation required.
+					case JMP:
+					/*Set the cpu->pc to be the value in the RS register. */
+						cpu->pc = cpu->reg_file[RS];
 						break;
-					case JSR:  //No operation required.
+					case JSR:
+						if (bit11 > 0) {
+							/*JSR case: If bit11 is set, load cpu->pc with the effective address stored in alu->r,
+							and then set register 7 to the value of TEMP, which was cpu->pc before the jump.  This
+							insures a pc value is stored in register 7 of where the jump started.*/
+							cpu->pc = alu->r;
+							cpu->reg_file[7] = TEMP;
+						} else {
+							/*JSRR case: If bit11 is not set, load cpu->pc value stored in cpu->reg_file[RS] (base register),
+							and then set register 7 to the value of TEMP, which was cpu->pc before the jump.  This
+							insures a pc value is stored in register 7 of where the jump started.*/
+							cpu->pc = cpu->reg_file[RS];
+							cpu->reg_file[7] = TEMP;
+						}
 						break;
 					case LD:
 					/*Load the target register with the data in cpu->mdr. */
