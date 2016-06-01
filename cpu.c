@@ -298,7 +298,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				cpu->mar = cpu->pc;
 				cpu->mdr = mem[cpu->mar];
 				cpu->ir = cpu->mdr;
-				// increment PC
+				// increment PC 
 				cpu->pc++;
 				// put printf statements in each state to see that it is working
 				state = DECODE;
