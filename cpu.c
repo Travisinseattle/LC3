@@ -705,7 +705,7 @@ void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					case LDR:
 						break;
 					case LEA:
-						cpu->reg_file[RD] = cpu->mdr;
+						cpu->reg_file[RD] = alu->r;
 						setcc(cpu);
 						break;
 					case NOT:
