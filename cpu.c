@@ -115,6 +115,13 @@ Register getBit11 (CPU_p cpu) {
 	return (Register) temp;
 }
 
+Register getBit12 (CPU_p cpu) {
+	if (cpu == NULL) return POINTER_ERROR;
+	Register temp = cpu->ir & BIT_ELEVEN;
+	temp = temp >> 12;
+	return (Register) temp;
+}
+
 Register getIR (CPU_p cpu) {
 	if (cpu == NULL) return POINTER_ERROR;
 	return cpu->ir;
@@ -142,32 +149,32 @@ Register signExtend(CPU_p cpu, int len) {
   Register val, bit, negative;
   
   /* Switch case to determine how many bits need extended.  Based on value of int, will sign
-  extend for 5, 6, 8, and 11 bits by . */
+  extend for 5, 6, 8, 9, and 11 bits by . */
   switch (len) {
 	  case 5:  //for sign extention of 5 bits.
-	  negative = 0x0FFE0;
+	  negative = 0xFFE0;
 	  val = cpu->ir & IMMED_MASK_5;
-	  bit = cpu->ir & 1 << 4;
+	  bit = cpu->ir & (1 << 4);
 	  break;
 	  case 6:  //for sign extention of 6 bits.
-	  negative = 0x0FFC0;
+	  negative = 0xFFC0;
 	  val = cpu->ir & IMMED_MASK_6;
-	  bit = cpu->ir & 1 << 5;
+	  bit = cpu->ir & (1 << 5);
 	  break;
 	  case 8:  //for sign extention of 8 bits.
-	  negative = 0x0FF00;
+	  negative = 0xFF00;
 	  val = cpu->ir & IMMED_MASK_8;
-	  bit = cpu->ir & 1 << 7;
+	  bit = cpu->ir & (1 << 7);
 	  break;
 	  case 9:  //for sign extention of 9 bits.
-	  negative = 0x0FE00;
+	  negative = 0xFE00;
 	  val = cpu->ir & IMMED_MASK_9;
-	  bit = cpu->ir & 1 << 8;
+	  bit = cpu->ir & (1 << 8);
 	  break;
 	  case 11:  //for sign extention of 11 bits.
-	  negative = 0x0F800;
+	  negative = 0xF800;
 	  val = cpu->ir & IMMED_MASK_11;
-	  bit = cpu->ir & 1 << 10;
+	  bit = cpu->ir & (1 << 10);
 	  break;
 	  default:
 	  break;	  
@@ -373,8 +380,8 @@ void editRP(CPU_p cpu){
 	}
 }
 
-Byte getNZP(Register opcode) {
-	Byte nzp = opcode >> 9;
+Byte getNZP(Register IR) {
+	Byte nzp = IR >> 9;
 	return nzp;
 }
 
@@ -444,7 +451,6 @@ void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 							}
 						break;
 					case BRnzp:
-						nzp_flag = getNZP(opcode);
 						cpu->sext = signExtend(cpu, 9);
 						break;
 					case JMP:
@@ -540,8 +546,6 @@ void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						alu->b = cpu->sext;
 						alu->r = alu->a + alu->b;
 						cpu->mar = alu->r;
-						//cpu->mar = cpu->sext;
-						printf("the MAR is %04X\n",cpu->mar);
 						setcc(cpu);
 						break;
 					case LDI:
@@ -683,9 +687,10 @@ void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						setcc(cpu);
 						break;
 					case BRnzp:
-						if ((nzp_flag == 1 && cpu->sw == 1) ||
-						(nzp_flag == 2 && cpu->sw == 2) ||
-						(nzp_flag == 4  && cpu->sw == 4)) {
+						if ((getBit10(cpu) == 1 && cpu->sw == 0x0001) ||
+						(getBit11(cpu) == 1 && cpu->sw == 0x0010) ||
+						(getBit12(cpu) == 1  && cpu->sw == 0x0100)) {
+							printf("Trying to BRANCH");
 							cpu->pc = alu->r;
 						}
 						break;
