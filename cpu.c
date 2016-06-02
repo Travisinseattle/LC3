@@ -380,14 +380,9 @@ void editRP(CPU_p cpu){
 	}
 }
 
-Byte getNZP(Register IR) {
-	Byte nzp = IR >> 9;
-	return nzp;
-}
-
 void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 	//Initiate varibles.
-	Byte RD, RS, S2, nzp_flag, bit5, bit11;
+	Byte RD, RS, S2, bit5, bit11;
 	//nzp_flag is used by branch case;
 	Register opcode = 0;
 	Register TEMP;
