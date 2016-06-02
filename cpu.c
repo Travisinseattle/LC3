@@ -208,7 +208,7 @@ int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
 	for(;;){
 	//Declare varibles
 	int menu;
-	int memory = 0x3000;
+	int memory = DEBUG_MEMORY;
    int counter;
    printf("Registers				Memory\n");
 	printf("=============================================================\n");
@@ -238,9 +238,10 @@ int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
 			return 1;
 			break;
 		case 5:  //Dump the memory.
-			//memoryDump(mem);
+			DEBUG_MEMORY = memoryDump();
 			break;
 		case 6:  //Fill the memory.
+			memoryFill(mem);
 			break;
 		default:  //Break.
 			break;
@@ -298,6 +299,21 @@ void saveMemory(unsigned short mem[MEM_SIZE]){
 	fclose(outfile);
 }
 
+int memoryDump(){
+	printf("\nInput starting memory address to view: ");
+	int i;
+	scanf("%X",&i);
+	return i;
+}
+void memoryFill(unsigned short mem[MEM_SIZE]){
+	printf("\nInput starting memory address to edit: ");
+	int i;
+	scanf("%X",&i);
+	printf("\nInput value to store: ");
+	int z;
+	scanf("%X",&z);
+	mem[i] = z;
+}
 
 Byte getNZP(Register opcode) {
 	Byte nzp = opcode >> 9;

@@ -66,6 +66,7 @@ typedef struct cpu_s {
 } CPU_s;
 
 typedef CPU_s * CPU_p;
+int DEBUG_MEMORY = 0x3000;
 
 // prototypes
 ALU_p constructALU (void);
@@ -82,4 +83,6 @@ int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]);
 void loadMemory(CPU_p cpu, unsigned short mem[MEM_SIZE]);
 int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value);
 void saveMemory(unsigned short mem[MEM_SIZE]);
+int memoryDump();
+void memoryFill(unsigned short mem[MEM_SIZE]);
 #endif
