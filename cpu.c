@@ -19,7 +19,6 @@
 #define FETCH_OP 3
 #define EXECUTE 4
 #define STORE 5
-#define MEM_SIZE 100
 
 
 //P.g 537 on PDF for the OPCODES
@@ -39,7 +38,7 @@ int initCPU (CPU_p cpu) {
 	cpu->alu = constructALU();
 	// initialize register file with random numbers
 	cpu->ir = 0;
-	cpu->pc = 0;
+	cpu->pc = 0x3000;
 	cpu->sw = 0;
 	cpu->mar = 0;
 	cpu->mdr = 0;
@@ -116,6 +115,13 @@ Register getBit11 (CPU_p cpu) {
 	return (Register) temp;
 }
 
+Register getBit12 (CPU_p cpu) {
+	if (cpu == NULL) return POINTER_ERROR;
+	Register temp = cpu->ir & BIT_ELEVEN;
+	temp = temp >> 12;
+	return (Register) temp;
+}
+
 Register getIR (CPU_p cpu) {
 	if (cpu == NULL) return POINTER_ERROR;
 	return cpu->ir;
@@ -143,27 +149,32 @@ Register signExtend(CPU_p cpu, int len) {
   Register val, bit, negative;
   
   /* Switch case to determine how many bits need extended.  Based on value of int, will sign
-  extend for 5, 6, 8, and 11 bits by . */
+  extend for 5, 6, 8, 9, and 11 bits by . */
   switch (len) {
 	  case 5:  //for sign extention of 5 bits.
-	  negative = 0x0FFE0;
+	  negative = 0xFFE0;
 	  val = cpu->ir & IMMED_MASK_5;
-	  bit = cpu->ir & 1 << 4;
+	  bit = cpu->ir & (1 << 4);
 	  break;
 	  case 6:  //for sign extention of 6 bits.
-	  negative = 0x0FFC0;
+	  negative = 0xFFC0;
 	  val = cpu->ir & IMMED_MASK_6;
-	  bit = cpu->ir & 1 << 5;
+	  bit = cpu->ir & (1 << 5);
 	  break;
 	  case 8:  //for sign extention of 8 bits.
-	  negative = 0x0FF00;
+	  negative = 0xFF00;
 	  val = cpu->ir & IMMED_MASK_8;
-	  bit = cpu->ir & 1 << 7;
+	  bit = cpu->ir & (1 << 7);
+	  break;
+	  case 9:  //for sign extention of 9 bits.
+	  negative = 0xFE00;
+	  val = cpu->ir & IMMED_MASK_9;
+	  bit = cpu->ir & (1 << 8);
 	  break;
 	  case 11:  //for sign extention of 11 bits.
-	  negative = 0x0F800;
+	  negative = 0xF800;
 	  val = cpu->ir & IMMED_MASK_11;
-	  bit = cpu->ir & 1 << 10;
+	  bit = cpu->ir & (1 << 10);
 	  break;
 	  default:
 	  break;	  
@@ -178,26 +189,12 @@ Register signExtend(CPU_p cpu, int len) {
   
   return val;
 }
-<<<<<<< HEAD
 
-/* setZeroFlag
-=======
-/* zeroExtend
-	Zero extender for trap instructions.
-*/
-Register zeroExtend(CPU_p cpu){
-	Register val;
-	val = cpu->ir & IMMED_MASK_8;
-	val = val&0x00FF;
-	return val;
-}
 /* setcc
->>>>>>> origin/master
 	A function to flag whether cpu->alu->r is set to 0 or some other value.  Used 
 	for determining if the system should perform a break operation.
 */
 void setcc (CPU_p cpu) {
-	if (cpu == NULL) return POINTER_ERROR;
 	if (cpu->alu->r == 0){
 		cpu->sw = 0x0001;
 	}
@@ -207,45 +204,87 @@ void setcc (CPU_p cpu) {
 		cpu->sw = 0x0100;
 	}
 }
+/* trapVectorTable
+	Simulates all traps.
+*/
+int trapVectorTable(CPU_p cpu, unsigned short mem[MEM_SIZE]){
+	int trap = cpu->sext;
+	int i = 0;
+	switch(trap){
+		//GETC Trap
+		case 32:
+			scanf("%c",&(cpu->reg_file[0]));
+			break;
+		//OUT Trap
+		case 33:
+			printf("%c",cpu->reg_file[0]);
+			break;
+		//PUTS Trap
+		case 34:
+			while(mem[cpu->reg_file[0]+i]!=0x0000){
+				printf("%c",mem[cpu->reg_file[0]+i]);
+				i++;
+			}
+			break;
+		//IN Trap
+		case 35:
+			printf("Input a character>");
+			scanf("%c",&(cpu->reg_file[0]));
+			break;
+		//HALT Trap
+		case 37:
+			return 1;
+			break;
+	}
+	return 0;
+}
 
-void debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
+int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
+	for(;;){
 	//Declare varibles
 	int menu;
-	int memory = 0;
+	int memory = DEBUG_MEMORY;
    int counter;
-   printf("Registers				Memory\n");
+   printf("\nRegisters				Memory\n");
 	printf("=============================================================\n");
    for (counter = 0; counter < 8; counter++) {
-      printf("R%d: %x   %04x: %x %x\n", counter, cpu ->reg_file[0]);
+      printf("R%d: %04X   			", counter, cpu ->reg_file[counter]);
+	  printf("0x%04X: %04X  0x%04X: %04X\n", memory, mem[memory],memory+1, mem[memory+1]);
+	  memory+=2;
    }
-   printf("\nMemory Space: \n");
    printf("=============================================================\n");
-   for (memory = 0; memory < MEM_SIZE; memory++){
-      printf("Memory: %04x: %x\n", memory, mem[memory]);
-   }
-	printf("PC: %x		SW: %x		IR: %x\n\n", cpu->pc, cpu->sw, cpu->ir);
+	printf("PC: %04X		SW: %04X		IR: %04X\n\n", cpu->pc, cpu->sw, cpu->ir);
 	//Capture menu choices.
+	printf("1)Load\n2)Save\n3)Run\n4)Step\n5)Dump\n6)Fill\nSelect a menu choice: ");
 	scanf("%d", &menu);
     getchar();
 	
 	switch (menu) {
 		case 1:  //Load a program.
+			loadMemory(cpu, mem);
+			DEBUG_MEMORY = cpu->pc;
 			break;
 		case 2:  //Save a program.
+			saveMemory(mem);
 			break;
 		case 3:  //Run a program.
+			return 0;
 			break;
 		case 4:  //return from function.
+			return 1;
 			break;
 		case 5:  //Dump the memory.
+			DEBUG_MEMORY = memoryDump();
 			break;
 		case 6:  //Fill the memory.
+			memoryFill(mem);
 			break;
+		case 7: //Edit other elements
+			editRP(cpu);
 		default:  //Break.
 			break;
 	}
-	
-	
+	}
 }
 
 /* loadMemory
@@ -254,30 +293,104 @@ void debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
 	storing data generated by the program. Comments represent what I expect
 	to happen when the PC reads the memory at that index.
 */
-void interpreter(unsigned short mem[MEM_SIZE]) {
+void loadMemory(CPU_p cpu,unsigned short mem[MEM_SIZE]) {
 	FILE *infile;
-	infile = fopen("memory.hex", "r");
-	int counter = 0;
-	do {
-		fscanf(infile, "%u", mem[counter]);
+	printf("Input file name to load: ");
+	char fileName[50];
+	scanf("%s",fileName);
+	//printf("%s\n",fileName);
+	infile = fopen(fileName, "rw");
+	//printf("File opened\n");
+	int counter;
+	fscanf(infile,"%X",&counter);
+	cpu->pc = counter;
+	//printf("Read counter! %04X\n",counter);
+	while(fscanf(infile, "%X", &mem[counter])!=-1){
+		//printf("Trying to read\n %04X",counter);
 		counter++;
-	} while (mem[counter-1] != NULL);
+	} 
 	fclose(infile);
    //Commands actually start at mem[1], first index is the .orig
 }
 
-Byte getNZP(Register opcode) {
-	Byte nzp = opcode >> 9;
+/* saveMemory
+	This function saves the current memory to a file, 
+	allowing programs to be saved.
+*/
+void saveMemory(unsigned short mem[MEM_SIZE]){
+	FILE *outfile;
+	printf("Input file name to save to: ");
+	char fileName[50];
+	scanf("%s",fileName);
+	outfile = fopen(fileName, "w");
+	int i;
+	printf("\nInput starting memory address to save: ");
+	scanf("%X",&i);
+	fprintf(outfile,"%04X\n",i);
+	int z;
+	printf("\nInput number of memory addresses to save: ");
+	scanf("%d",&z);
+	z+=i;
+	for(;i<z;i++){
+		fprintf(outfile,"%04X\n",mem[i]);
+	}
+	fclose(outfile);
+}
+/* memoryDump()
+	Asks for user input and then returns that info.
+*/
+int memoryDump(){
+	printf("\nInput starting memory address to view: ");
+	int i;
+	scanf("%X",&i);
+	return i;
+}
+/* memoryFill()
+	Asks for user input corresponding to a memory location
+	then asks for a hex value to be placed there.
+*/
+void memoryFill(unsigned short mem[MEM_SIZE]){
+	printf("\nInput starting memory address to edit: ");
+	int i;
+	scanf("%X",&i);
+	printf("\nInput value to store: ");
+	int z;
+	scanf("%X",&z);
+	mem[i] = z;
+}
+/*Debug Editer
+	Only to be used for testing.
+*/
+void editRP(CPU_p cpu){
+	printf("\n1)Edit Registers, 2)Edit PC : ");
+	int i;
+	int x;
+	int z;
+	scanf("%d",&i);
+	if(i==1){
+		printf("\nWhich Register?: ");
+		scanf("%d",&x);
+		printf("\nTo what value?: ");
+		scanf("%X",&z);
+		cpu->reg_file[x] = z;
+	}else{
+		printf("\nEnter PC value: ");
+		scanf("%X",&z);
+		cpu->pc = z;
+	}
+}
+
+Byte getNZP(Register IR) {
+	Byte nzp = IR >> 9;
 	return nzp;
 }
 
-int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
+void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 	//Initiate varibles.
-	Byte RD, RS, S2, nzp_flag, offset, nzp_switch = 0, R7_flag = 0, bit5;
-	//nzp_flag is used by branch case; nzp_switch is used by switching opcodes such as ADD, ADI, ect...
-	//R7 Flag should be checked in each case to see if you need to return to R7 if JSR was taken.
+	Byte RD, RS, S2, nzp_flag, bit5, bit11;
+	//nzp_flag is used by branch case;
 	Register opcode = 0;
-	Register branch_taken_addr;
+	Register TEMP;
 	ALU_p alu = cpu->alu;
 	
     int state = FETCH;
@@ -287,10 +400,8 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
         //NOTE: By contract, do not JSR to another JMP or Branch statement.
 
 			case FETCH:
-			/* there is a flag set when you call the inital program.  this allows the debug
-			   menu to display and step if it is called.  (./cpuDriver -d). */
 				if (debug_value == 1) {
-					debug(cpu, mem);
+					debug_value = debug(cpu, mem);
 				}
 				/* Set cpu->mar to value of pc, which represents an index in the memory.
 				   Set cpu->mdr to be equal to memory at index of cpu->mar.
@@ -307,8 +418,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				/* Parse the Opcode and store the result using getOPCODE() function. */
 				opcode = getOPCODE(cpu);
 				switch (opcode) {
-   					case HALT:
-						break;
 					case ADD:
 						bit5 = getBit5(cpu);
 						/* First get the 5th bit.*/
@@ -342,22 +451,34 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 							}
 						break;
 					case BRnzp:
-						nzp_flag = getNZP(opcode);
-						//No Further Actions;
+						cpu->sext = signExtend(cpu, 9);
 						break;
 					case JMP:
-						offset = get9Offset(cpu);
+						RS = getRS(cpu);
 						break;
 					case JSR:
-						cpu -> reg_file[7] = cpu -> pc;
-						cpu += get11Offset(cpu);
-						R7_flag = 1;
+						TEMP = cpu->pc;
+						bit11 = getBit11(cpu);
+						if (bit11 > 0) {
+							/*JSR case: Load cpu->sext with offset11. */
+							cpu->sext = signExtend(cpu, 11);
+						} else {
+							/*JSRR case: Capture the base register. */
+							RS = getRS(cpu);
+						}
 						break;
 					case LD:
+						RD = getRD(cpu);
+						cpu->sext = signExtend(cpu, 9);
 						break;
 					case LDI:
+						RD = getRD(cpu);
+						cpu->sext = signExtend(cpu, 9);
 						break;
 					case LDR:
+						RD = getRD(cpu);
+						RS = getRS(cpu);
+						cpu->sext = signExtend(cpu, 6);
 						break;
 					case LEA:
 						RD = getRD(cpu);
@@ -380,7 +501,8 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						RS = getRS(cpu);
 						cpu->sext = signExtend(cpu,6);
 						break;
-					case TRAP:
+					case TRAP: 
+						cpu->sext = signExtend(cpu,8);
 						break;
 					default:
 						break;
@@ -393,28 +515,73 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				the array of Registers in the CPU, or memory locations.
 				*/
 				switch (opcode) {
-					case HALT: //No operation required.
-						break;
 					case ADD: //No operation required.
 						break;
 					case AND: //No operation required.
 						break;
-					case BRnzp: //No operation required.
+					case BRnzp:
+					/*Evaluate the address and store result in alu->r for use if branch is taken. */
+						alu->a = cpu->pc;
+						alu->b = cpu->sext;
+						alu->r = alu->a + alu->b;
 						break;
 					case JMP: //No operation required.
 						break;
-					case JSR: //No operation required.
+					case JSR:
+					/*JSR Case: if bit11 is set, evaluate the address of the new pc by loading
+					the alu->a with cpu->pc and alu->b with cpu->sext and adding them together.  Store
+					result in alu->r.*/
+						if (bit11 > 0) {
+							alu->a = cpu->pc;
+							alu->b = cpu->sext;
+							alu->r = alu->a + alu->b;
+						}
 						break;
-					case LD: //No operation required.
+					case LD:
+					/* In order to evaluate the value to placed in cpu->mar, first load
+					the adder with the cpu->pc and cpu->sext and then add them together.
+					Then load cpu-mar with the result.  Finally, evaluate the result for
+					positive/negative/zero and set the cpu->sw using setcc().*/
+						alu->a = cpu->pc;
+						alu->b = cpu->sext;
+						alu->r = alu->a + alu->b;
+						cpu->mar = alu->r;
+						setcc(cpu);
 						break;
-					case LDI: //No operation required.
+					case LDI:
+					/* In order to evaluate the value to placed in cpu->mar, first load
+					the adder with the cpu->pc and cpu->sext and then add them together.
+					Then load cpu-mar with the result.  Finally, evaluate the result for
+					positive/negative/zero and set the cpu->sw using setcc().*/
+						alu->a = cpu->pc;
+						alu->b = cpu->sext;
+						alu->r = alu->a + alu->b;
+						cpu->mar = alu->r;
+						setcc(cpu);
 						break;
-					case LDR: //No operation required.
+					case LDR:
+					/* In order to evaluate the value to placed in cpu->mar, first load
+					the adder with the cpu->reg_file[RS] and cpu->sext and then add them
+					together. Then load cpu-mar with the result.  Finally, evaluate the
+					result for positive/negative/zero and set the cpu->sw using setcc().*/
+						alu->a = cpu->reg_file[RS];
+						alu->b = cpu->sext;
+						alu->r = alu->a + alu->b;
+						cpu->mar = alu->r;
+						setcc(cpu);
 						break;
 					case LEA:
-						cpu->mar = cpu->pc + cpu->sext;
+					/* In order to evaluate the value to be placed in the RD, first load
+					the adder with the cpu->pc and cpu->sext and then add them together.
+					Finally, evaluate the result for positive/negative/zero and set the 
+					cpu->sw using setcc().*/
+						alu->a = cpu->pc;
+						alu->b = cpu->sext;
+						alu->r = alu->a + alu->b;
+						setcc(cpu);
 						break;
 					case NOT: //No operation required.
+						cpu->alu->a = cpu->reg_file[RS];
 						break;
 					case ST:
 						cpu->mar = cpu->pc + cpu->sext;
@@ -437,59 +604,66 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				the array of registers in the CPU, or from cpu->sext values, ect.
 				*/
 				switch (opcode) {
-					case HALT:
-						break;
 					case ADD:
-					if (bit5 > 0) {
-					/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
-					alu->b with cpu->sext.*/
-						alu->a = cpu-reg_file(RS)
-						alu->b = cpu->sext;
-					} else {
-					/* Otherwise, alu->a is loaded with cpu->reg_file[RS],
-					alu->b with cpu->reg_file[S2].*/
-						alu->a = cpu->reg_file[RS];
-						alu->b = cpu->reg_file[S2];
-					}
+						if (bit5 > 0) {
+						/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
+						alu->b with cpu->sext.*/
+							alu->a = cpu->reg_file[RS];
+							alu->b = cpu->sext;
+						} else {
+						/* Otherwise, alu->a is loaded with cpu->reg_file[RS],
+						alu->b with cpu->reg_file[S2].*/
+							alu->a = cpu->reg_file[RS];
+							alu->b = cpu->reg_file[S2];
+						}
 						break;
 					case AND:
-					if (bit5 > 0) {
-					/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
-					alu->b with cpu->sext.*/
-						alu->a = cpu-reg_file(RS)
-						alu->b = cpu->sext;
-					} else {
-					/* Otherwise, alu->a is loaded with cpu->reg_file[RS],
-					alu->b with cpu->reg_file[S2].*/
-						alu->a = cpu->reg_file[RS];
-						alu->b = cpu->reg_file[S2];
-					}
+						if (bit5 > 0) {
+						/* If bit5 is set, alu->a is loaded with cpu->reg_file[RS],
+						alu->b with cpu->sext.*/
+							alu->a = cpu->reg_file[RS];
+							alu->b = cpu->sext;
+						} else {
+						/* Otherwise, alu->a is loaded with cpu->reg_file[RS],
+						alu->b with cpu->reg_file[S2].*/
+							alu->a = cpu->reg_file[RS];
+							alu->b = cpu->reg_file[S2];
+						}
 						break;
-					case BRnzp:
+					case BRnzp:  //No operation required.
 						break;
-					case JMP:
+					case JMP:  //No operation required.
 						break;
-					case JSR:
+					case JSR:  //No operation required.
 						break;
 					case LD:
+					/* Load the cpu->mdr with the data found at the memory index of cpu->mar. */
+						cpu->mdr = mem[cpu->mar];
 						break;
 					case LDI:
+					/* Load the cpu->mdr with the data found at the memory index of cpu->mar.
+					Set cpu->mar to the value of cpu->mdr.  Load cpu->mdr with data found at 
+					mem[cpu->mar]. */
+						cpu->mdr = mem[cpu->mar];
+						cpu->mar = cpu->mdr;
+						cpu->mdr = mem[cpu->mar];
 						break;
 					case LDR:
+					/* Load the cpu->mdr with the data found at the memory index of cpu->mar. */
+						cpu->mdr = mem[cpu->mar];
 						break;
-					case LEA:
-						cpu->mdr = cpu->mar;
+					case LEA:  //No operation required.
 						break;
-					case NOT:
+					case NOT:  //No operation required.
 						break;
-					case ST:
-						//Same as below
-					case STI:
-						//Same as below
+					case ST:  //No operation required.
+						break;
+					case STI:  //No operation required.
+						break;
 					case STR:
 						cpu->mdr = cpu->reg_file[RD];
 						break;
-					case TRAP:
+					case TRAP:  //No operation required.
 						break;
 					default:
 						break;
@@ -498,17 +672,12 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				break;
 			case EXECUTE:
 				switch (opcode) {
-					case HALT:
-						break;
 					case ADD:
 					/* Add a and b and place the result in alu->r.  Call setcc
 					to load cpu->sw with the correct bits based on the whether the
 					result of the addition is positive, negative or zero.*/
 						alu->r = alu->a + alu->b;
 						setcc(cpu);
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case AND:
 					/* And a and b and place the result in alu->r.  Call setcc
@@ -516,92 +685,43 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					result of the addition is positive, negative or zero.*/
 						alu->r = alu->a & alu->b;
 						setcc(cpu);
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case BRnzp:
-						if ((nzp_flag == 1  || nzp_flag == 3 || nzp_flag == 5)&& nzp_switch == 1) {
-							cpu -> pc = cpu -> pc + signExtend(cpu, 9);
-						} else if ((nzp_flag == 2 || nzp_flag == 3 || nzp_flag == 6) && nzp_switch == 2){
-							cpu -> pc = cpu -> pc + signExtend(cpu, 9);
-						} else if ((nzp_flag == 4 || nzp_flag == 5 || nzp_flag == 6) && nzp_switch == 4){
-							cpu -> pc = cpu -> pc + signExtend(cpu, 9);
-						} else if (nzp_flag == 7) {
-							cpu -> pc = cpu -> pc + signExtend(cpu, 9);
+						if ((getBit10(cpu) == 1 && cpu->sw == 0x0001) ||
+						(getBit11(cpu) == 1 && cpu->sw == 0x0010) ||
+						(getBit12(cpu) == 1  && cpu->sw == 0x0100)) {
+							printf("Trying to BRANCH");
+							cpu->pc = alu->r;
 						}
 						break;
 					case JMP:
-						cpu -> pc = getRS(cpu);
-						state = FETCH;
 						break;
 					case JSR:
-						state = FETCH;
 						break;
 					case LD:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case LDI:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case LDR:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case LEA:
-<<<<<<< HEAD
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
-=======
-						cpu->reg_file[RD] = cpu->mdr;
+						cpu->reg_file[RD] = alu->r;
 						setcc(cpu);
->>>>>>> origin/master
 						break;
 					case NOT:
-<<<<<<< HEAD
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
-						break;
-					case RET:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
+						cpu->alu->r = ~(cpu->alu->a);
 						break;
 					case ST:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
 					case STI:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
 						break;
-					case STR:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
-						}
-=======
-						cpu->mdr = ~(RS);
-						break;
-					case ST:
-						//Same as below
-					case STI:
-						//Same as below
 					case STR:
 						mem[cpu->mar]=cpu->mdr;
->>>>>>> origin/master
 						break;
 					case TRAP:
-						if (R7_flag == 1) {
-							cpu -> pc = cpu -> reg_file[7];
+						if(trapVectorTable(cpu,mem)==1){
+							debug(cpu,mem);
+							return;
 						}
 						break;
 					default:
@@ -613,44 +733,62 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 				/* Finalize the operation by either moving the result to the RD register, or loading/storing
 					to memory.  */
 				switch (opcode) {
-					case HALT:
-						break;
 					case ADD:
 					/* Load reg_file[RD] with the value in alu->r.*/
 					cpu->reg_file[RD] = alu->r;
 						break;
 					case AND:
+					/* Load reg_file[RD] with the value in alu->r.*/
+					cpu->reg_file[RD] = alu->r;
 						break;
-					case BRnzp:
-               //Unused
+					case BRnzp:  //No operation required.
 						break;
 					case JMP:
-               //Unused
+					/*Set the cpu->pc to be the value in the RS register. */
+						cpu->pc = cpu->reg_file[RS];
 						break;
 					case JSR:
-               //Unused
+						if (bit11 > 0) {
+							/*JSR case: If bit11 is set, load cpu->pc with the effective address stored in alu->r,
+							and then set register 7 to the value of TEMP, which was cpu->pc before the jump.  This
+							insures a pc value is stored in register 7 of where the jump started.*/
+							cpu->pc = alu->r;
+							cpu->reg_file[7] = TEMP;
+						} else {
+							/*JSRR case: If bit11 is not set, load cpu->pc value stored in cpu->reg_file[RS] (base register),
+							and then set register 7 to the value of TEMP, which was cpu->pc before the jump.  This
+							insures a pc value is stored in register 7 of where the jump started.*/
+							cpu->pc = cpu->reg_file[RS];
+							cpu->reg_file[7] = TEMP;
+						}
 						break;
 					case LD:
-						break;
-					case LDI:
-						break;
-					case LDR:
-						break;
-					case LEA:
-						break;
-					case NOT:
+					/*Load the target register with the data in cpu->mdr. */
 						cpu->reg_file[RD] = cpu->mdr;
 						break;
-					case ST:
-						//Unused
+					case LDI:
+					/*Load the target register with the data in cpu->mdr. */
+						cpu->reg_file[RD] = cpu->mdr;
 						break;
-					case STI:
-						//Unused
+					case LDR:
+					/*Load the target register with the data in cpu->mdr. */
+						cpu->reg_file[RD] = cpu->mdr;
 						break;
-					case STR:
-						//Unused
+					case LEA:
+					/*Load the target register with the value of alu->r. */
+						cpu->reg_file[RD] = cpu->alu->r;
 						break;
-					case TRAP:
+					case NOT:
+					/*Load the target register with the value of alu->r. */
+						cpu->reg_file[RD] = cpu->alu->r;
+						break;
+					case ST:  //No operation required.
+						break;
+					case STI:  //No operation required.
+						break;
+					case STR:  //No operation required.
+						break;
+					case TRAP:  //No operation required.
 						break;
 					default:
 						break;

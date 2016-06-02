@@ -19,6 +19,7 @@
 #define RD_MASK 0x0E00
 #define RS_MASK 0x01C0
 #define S2_MASK	0x0007
+#define MEM_SIZE 0xFFFF
 #define IMMED_MASK_5 0x003F
 #define IMMED_MASK_6 0x003F
 #define IMMED_MASK_8 0x00FF
@@ -65,6 +66,7 @@ typedef struct cpu_s {
 } CPU_s;
 
 typedef CPU_s * CPU_p;
+int DEBUG_MEMORY = 0x3000;
 
 // prototypes
 ALU_p constructALU (void);
@@ -77,8 +79,11 @@ Register getRS (CPU_p cpu);
 void loadRegisters(CPU_p cpu, Register reg1, Register reg2);
 Register signExtend(CPU_p cpu, int len);
 Byte setZeroFlag (CPU_p cpu);
-void debug (CPU_p cpu, unsigned short mem[32]);
-void loadMemory(unsigned short mem[32]);
-int controller (CPU_p cpu, unsigned short mem[32], Byte debug_value);
-
+int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]);
+void loadMemory(CPU_p cpu, unsigned short mem[MEM_SIZE]);
+void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value);
+void saveMemory(unsigned short mem[MEM_SIZE]);
+int memoryDump();
+void memoryFill(unsigned short mem[MEM_SIZE]);
+void editRP(CPU_p cpu);
 #endif
