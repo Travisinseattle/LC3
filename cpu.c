@@ -206,12 +206,12 @@ void setcc (CPU_p cpu) {
 /* trapVectorTable
 	Simulates all traps.
 */
-void trapVectorTable(CPU_p cpu){
+int trapVectorTable(CPU_p cpu, unsigned short mem[MEM_SIZE]){
 	int trap = cpu->sext;
+	int i = 0;
 	switch(trap){
 		//GETC Trap
 		case 32:
-			printf("Input a character>");
 			scanf("%c",&(cpu->reg_file[0]));
 			break;
 		//OUT Trap
@@ -220,14 +220,22 @@ void trapVectorTable(CPU_p cpu){
 			break;
 		//PUTS Trap
 		case 34:
+			while(mem[cpu->reg_file[0]+i]!=0x0000){
+				printf("%c",mem[cpu->reg_file[0]+i]);
+				i++;
+			}
 			break;
 		//IN Trap
 		case 35:
+			printf("Input a character>");
+			scanf("%c",&(cpu->reg_file[0]));
 			break;
 		//HALT Trap
-		case 36:
+		case 37:
+			return 1;
 			break;
 	}
+	return 0;
 }
 
 int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
@@ -236,7 +244,7 @@ int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
 	int menu;
 	int memory = DEBUG_MEMORY;
    int counter;
-   printf("Registers				Memory\n");
+   printf("\nRegisters				Memory\n");
 	printf("=============================================================\n");
    for (counter = 0; counter < 8; counter++) {
       printf("R%d: %04X   			", counter, cpu ->reg_file[counter]);
@@ -270,6 +278,8 @@ int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
 		case 6:  //Fill the memory.
 			memoryFill(mem);
 			break;
+		case 7: //Edit other elements
+			editRP(cpu);
 		default:  //Break.
 			break;
 	}
@@ -347,13 +357,34 @@ void memoryFill(unsigned short mem[MEM_SIZE]){
 	scanf("%X",&z);
 	mem[i] = z;
 }
+/*Debug Editer
+	Only to be used for testing.
+*/
+void editRP(CPU_p cpu){
+	printf("\n1)Edit Registers, 2)Edit PC : ");
+	int i;
+	int x;
+	int z;
+	scanf("%d",&i);
+	if(i==1){
+		printf("\nWhich Register?: ");
+		scanf("%d",&x);
+		printf("\nTo what value?: ");
+		scanf("%X",&z);
+		cpu->reg_file[x] = z;
+	}else{
+		printf("\nEnter PC value: ");
+		scanf("%X",&z);
+		cpu->pc = z;
+	}
+}
 
 Byte getNZP(Register opcode) {
 	Byte nzp = opcode >> 9;
 	return nzp;
 }
 
-int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
+void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 	//Initiate varibles.
 	Byte RD, RS, S2, nzp_flag, bit5, bit11;
 	//nzp_flag is used by branch case;
@@ -368,8 +399,6 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
         //NOTE: By contract, do not JSR to another JMP or Branch statement.
 
 			case FETCH:
-			/* there is a flag set when you call the inital program.  this allows the debug
-			   menu to display and step if it is called.  (./cpuDriver -d). */
 				if (debug_value == 1) {
 					debug_value = debug(cpu, mem);
 				}
@@ -689,7 +718,10 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						mem[cpu->mar]=cpu->mdr;
 						break;
 					case TRAP:
-						trapVectorTable(cpu);
+						if(trapVectorTable(cpu,mem)==1){
+							debug(cpu,mem);
+							return;
+						}
 						break;
 					default:
 						break;

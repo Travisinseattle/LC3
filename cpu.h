@@ -81,8 +81,9 @@ Register signExtend(CPU_p cpu, int len);
 Byte setZeroFlag (CPU_p cpu);
 int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]);
 void loadMemory(CPU_p cpu, unsigned short mem[MEM_SIZE]);
-int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value);
+void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value);
 void saveMemory(unsigned short mem[MEM_SIZE]);
 int memoryDump();
 void memoryFill(unsigned short mem[MEM_SIZE]);
+void editRP(CPU_p cpu);
 #endif
