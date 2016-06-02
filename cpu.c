@@ -159,6 +159,11 @@ Register signExtend(CPU_p cpu, int len) {
 	  val = cpu->ir & IMMED_MASK_8;
 	  bit = cpu->ir & 1 << 7;
 	  break;
+	  case 9:  //for sign extention of 9 bits.
+	  negative = 0x0FE00;
+	  val = cpu->ir & IMMED_MASK_9;
+	  bit = cpu->ir & 1 << 8;
+	  break;
 	  case 11:  //for sign extention of 11 bits.
 	  negative = 0x0F800;
 	  val = cpu->ir & IMMED_MASK_11;
@@ -178,17 +183,6 @@ Register signExtend(CPU_p cpu, int len) {
   return val;
 }
 
-/* setZeroFlag
-=======
-/* zeroExtend
-	Zero extender for trap instructions.
-*/
-Register zeroExtend(CPU_p cpu){
-	Register val;
-	val = cpu->ir & IMMED_MASK_8;
-	val = val&0x00FF;
-	return val;
-}
 /* setcc
 	A function to flag whether cpu->alu->r is set to 0 or some other value.  Used 
 	for determining if the system should perform a break operation.
@@ -546,6 +540,8 @@ void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						alu->b = cpu->sext;
 						alu->r = alu->a + alu->b;
 						cpu->mar = alu->r;
+						//cpu->mar = cpu->sext;
+						printf("the MAR is %04X\n",cpu->mar);
 						setcc(cpu);
 						break;
 					case LDI:
