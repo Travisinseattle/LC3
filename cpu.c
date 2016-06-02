@@ -286,12 +286,14 @@ void saveMemory(unsigned short mem[MEM_SIZE]){
 	outfile = fopen(fileName, "w");
 	int i;
 	printf("\nInput starting memory address to save: ");
-	scanf("%X",i);
+	scanf("%X",&i);
+	fprintf(outfile,"%04X\n",i);
 	int z;
 	printf("\nInput number of memory addresses to save: ");
-	scanf("%d",z);
+	scanf("%d",&z);
+	z+=i;
 	for(;i<z;i++){
-		fprintf(outfile,"%X",mem[i]);
+		fprintf(outfile,"%04X\n",mem[i]);
 	}
 	fclose(outfile);
 }
