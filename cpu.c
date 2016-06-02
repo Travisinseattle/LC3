@@ -778,7 +778,8 @@ void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 					/*Load the target register with the value of alu->r. */
 						cpu->reg_file[RD] = cpu->alu->r;
 						break;
-					case ST:  //No operation required.
+					case ST:
+						mem[cpu->mar] = cpu->reg_file[RD];
 						break;
 					case STI:  //No operation required.
 						break;
