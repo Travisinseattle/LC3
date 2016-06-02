@@ -213,6 +213,7 @@ int trapVectorTable(CPU_p cpu, unsigned short mem[MEM_SIZE]){
 	switch(trap){
 		//GETC Trap
 		case 32:
+			cpu->reg_file[0] = 0;
 			scanf("%c",&(cpu->reg_file[0]));
 			break;
 		//OUT Trap
@@ -222,12 +223,13 @@ int trapVectorTable(CPU_p cpu, unsigned short mem[MEM_SIZE]){
 		//PUTS Trap
 		case 34:
 			while(mem[cpu->reg_file[0]+i]!=0x0000){
-				printf("%c",mem[cpu->reg_file[0]+i]);
+				printf("%c",mem[(cpu->reg_file[0])+i]);
 				i++;
 			}
 			break;
 		//IN Trap
 		case 35:
+			cpu->reg_file[0] = 0;
 			printf("Input a character>");
 			scanf("%c",&(cpu->reg_file[0]));
 			break;
@@ -771,7 +773,6 @@ void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						break;
 					case LEA:
 					/*Load the target register with the value of alu->r. */
-						cpu->reg_file[RD] = cpu->alu->r;
 						break;
 					case NOT:
 					/*Load the target register with the value of alu->r. */

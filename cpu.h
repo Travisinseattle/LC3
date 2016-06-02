@@ -39,7 +39,7 @@
 #define LD 2
 #define LDI 10
 #define LDR 6
-#define LEA 13
+#define LEA 14
 #define NOT 9
 #define ST 3
 #define STI 11
