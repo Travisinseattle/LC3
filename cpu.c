@@ -38,7 +38,7 @@ int initCPU (CPU_p cpu) {
 	cpu->alu = constructALU();
 	// initialize register file with random numbers
 	cpu->ir = 0;
-	cpu->pc = 0;
+	cpu->pc = 0x3000;
 	cpu->sw = 0;
 	cpu->mar = 0;
 	cpu->mdr = 0;
@@ -203,6 +203,32 @@ void setcc (CPU_p cpu) {
 		cpu->sw = 0x0100;
 	}
 }
+/* trapVectorTable
+	Simulates all traps.
+*/
+void trapVectorTable(CPU_p cpu){
+	int trap = cpu->sext;
+	switch(trap){
+		//GETC Trap
+		case 32:
+			printf("Input a character>");
+			scanf("%c",&(cpu->reg_file[0]));
+			break;
+		//OUT Trap
+		case 33:
+			printf("%c",cpu->reg_file[0]);
+			break;
+		//PUTS Trap
+		case 34:
+			break;
+		//IN Trap
+		case 35:
+			break;
+		//HALT Trap
+		case 36:
+			break;
+	}
+}
 
 int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
 	for(;;){
@@ -213,8 +239,8 @@ int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
    printf("Registers				Memory\n");
 	printf("=============================================================\n");
    for (counter = 0; counter < 8; counter++) {
-      printf("R%d: %X   		", counter, cpu ->reg_file[0]);
-	  printf("Memory: %04X: %04X  %04X: %04X\n", memory, mem[memory],memory+1, mem[memory+1]);
+      printf("R%d: %04X   			", counter, cpu ->reg_file[counter]);
+	  printf("0x%04X: %04X  0x%04X: %04X\n", memory, mem[memory],memory+1, mem[memory+1]);
 	  memory+=2;
    }
    printf("=============================================================\n");
@@ -227,6 +253,7 @@ int debug (CPU_p cpu, unsigned short mem[MEM_SIZE]) {
 	switch (menu) {
 		case 1:  //Load a program.
 			loadMemory(cpu, mem);
+			DEBUG_MEMORY = cpu->pc;
 			break;
 		case 2:  //Save a program.
 			saveMemory(mem);
@@ -298,13 +325,19 @@ void saveMemory(unsigned short mem[MEM_SIZE]){
 	}
 	fclose(outfile);
 }
-
+/* memoryDump()
+	Asks for user input and then returns that info.
+*/
 int memoryDump(){
 	printf("\nInput starting memory address to view: ");
 	int i;
 	scanf("%X",&i);
 	return i;
 }
+/* memoryFill()
+	Asks for user input corresponding to a memory location
+	then asks for a hex value to be placed there.
+*/
 void memoryFill(unsigned short mem[MEM_SIZE]){
 	printf("\nInput starting memory address to edit: ");
 	int i;
@@ -439,7 +472,8 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						RS = getRS(cpu);
 						cpu->sext = signExtend(cpu,6);
 						break;
-					case TRAP:  //No operation required.
+					case TRAP: 
+						cpu->sext = signExtend(cpu,8);
 						break;
 					default:
 						break;
@@ -655,6 +689,7 @@ int controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						mem[cpu->mar]=cpu->mdr;
 						break;
 					case TRAP:
+						trapVectorTable(cpu);
 						break;
 					default:
 						break;
