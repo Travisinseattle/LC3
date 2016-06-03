@@ -3,6 +3,8 @@
 	
 	Programmer: George Mobus
 	Programmer: Travis Holloway
+	Programmer: Alec Walsh
+	Programmer: Tyler Horn
 	Date: 4/20/16
 	Descritption:
 		This file contains the implementation code for the CPU class.
@@ -215,6 +217,7 @@ int trapVectorTable(CPU_p cpu, unsigned short mem[MEM_SIZE]){
 		case 32:
 			cpu->reg_file[0] = 0;
 			scanf("%c",&(cpu->reg_file[0]));
+			getchar();
 			break;
 		//OUT Trap
 		case 33:

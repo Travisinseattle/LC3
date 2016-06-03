@@ -3,6 +3,8 @@
 	
     Programer: George Mobus
     Programer: Travis Holloway
+	Programmer: Alec Walsh
+	Programmer: Tyler Horn
 	Date: 4/20/16
 	Description:
 		This header file contains the definitions for the CPU object.
@@ -20,7 +22,7 @@
 #define RS_MASK 0x01C0
 #define S2_MASK	0x0007
 #define MEM_SIZE 0xFFFF
-#define IMMED_MASK_5 0x003F
+#define IMMED_MASK_5 0x001F
 #define IMMED_MASK_6 0x003F
 #define IMMED_MASK_8 0x00FF
 #define IMMED_MASK_9 0x01FF
