@@ -199,12 +199,12 @@ Register signExtend(CPU_p cpu, int len) {
 	for determining if the system should perform a break operation.
 */
 void setcc (CPU_p cpu) {
-	if (cpu->alu->r == 0){
-		cpu->sw = 0x0001;
-	}
-	else if(cpu->alu->r > 0){
+	if ((cpu->alu->r)==0){
 		cpu->sw = 0x0010;
-	}else{
+	}
+	else if((cpu->alu->r)>>15==0){
+		cpu->sw = 0x0001;
+	}else if((cpu->alu->r)>>15==1){
 		cpu->sw = 0x0100;
 	}
 }
@@ -255,8 +255,9 @@ int trapVectorTable(CPU_p cpu, unsigned short mem[MEM_SIZE]){
 		//IN Trap
 		case 35:
 			cpu->reg_file[0] = 0;
-			printf("Input a character>");
-			scanf("%c",&(cpu->reg_file[0]));
+			printf("\nInput a character>");
+			cpu->reg_file[0] = getch();
+			printf("%c\n",cpu->reg_file[0]);
 			break;
 		//HALT Trap
 		case 37:
@@ -709,10 +710,9 @@ void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						setcc(cpu);
 						break;
 					case BRnzp:
-						if ((getBit10(cpu) == 1 && cpu->sw == 0x0001) ||
-						(getBit11(cpu) == 1 && cpu->sw == 0x0010) ||
-						(getBit12(cpu) == 1  && cpu->sw == 0x0100)) {
-							printf("Trying to BRANCH");
+						if ((getBit9(cpu) == 1 && cpu->sw == 0x0001) ||
+						(getBit10(cpu) == 1 && cpu->sw == 0x0010) ||
+						(getBit11(cpu) == 1  && cpu->sw == 0x0100)) {
 							cpu->pc = alu->r;
 						}
 						break;
@@ -732,6 +732,7 @@ void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						break;
 					case NOT:
 						cpu->alu->r = ~(cpu->alu->a);
+						setcc(cpu);
 						break;
 					case ST:
 						break;
