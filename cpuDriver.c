@@ -22,7 +22,7 @@ static unsigned short memory[MEM_SIZE];
 
 
 int main(int argc, char *argv[]) {
-	
+	setvbuf(stdout, NULL, _IONBF, 0);
 	/* Initiate the CPU */
 	CPU_p cpu = constructCPU();
 	initCPU(cpu);
