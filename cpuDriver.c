@@ -2,6 +2,8 @@
 	cpuDriver.c
 	
 	Programmer: Travis Holloway
+	Programmer: Alec Walsh
+	Programmer: Tyler Horn
 	Date: 4/26/16
 	Descritption:
 		This file is the driver for the cpu program.
