@@ -709,9 +709,9 @@ void controller (CPU_p cpu, unsigned short mem[MEM_SIZE], Byte debug_value) {
 						setcc(cpu);
 						break;
 					case BRnzp:
-						if ((getBit10(cpu) == 1 && cpu->sw == 0x0001) ||
-						(getBit11(cpu) == 1 && cpu->sw == 0x0010) ||
-						(getBit12(cpu) == 1  && cpu->sw == 0x0100)) {
+						if ((getBit9(cpu) == 1 && cpu->sw == 0x0001) ||
+						(getBit10(cpu) == 1 && cpu->sw == 0x0010) ||
+						(getBit11(cpu) == 1  && cpu->sw == 0x0100)) {
 							printf("Trying to BRANCH");
 							cpu->pc = alu->r;
 						}
